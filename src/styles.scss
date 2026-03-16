@@ -9,12 +9,12 @@
   --color-primary-dark: #{$blue-700};
   --color-primary-text: #fff;
 
-  --color-success: #{$green-500};
-  --color-success-light: #{$green-100};
+  --color-success: #{$green-600};
+  --color-success-light: #{$green-50};
   --color-success-text: #{$green-800};
 
-  --color-warning: #{$amber-500};
-  --color-warning-light: #{$amber-100};
+  --color-warning: #{$amber-600};
+  --color-warning-light: #{$amber-50};
   --color-warning-text: #{$amber-800};
 
   --color-error: #{$red-500};
@@ -78,8 +78,22 @@
   --radius-lg: #{$radius-lg};
   --radius-xl: #{$radius-xl};
 
-  // Sidebar
-  --sidebar-width: 260px;
+  // Layout
+  --sidebar-width: var(--nav-rail-width);
+  --nav-rail-width: 64px;
+  --sub-sidebar-width: 280px;
+  --artifact-panel-width: 420px;
+
+  // Additional semantic colors
+  --color-bg-dark: #0f172a;
+  --color-purple: #7c3aed;
+  --color-purple-light: #f5f3ff;
+
+  // Status colors
+  --color-status-active: #{$green-500};
+  --color-status-paused: #{$gray-400};
+  --color-status-error: #{$red-500};
+  --color-status-running: #{$blue-500};
 }
 
 // ── Reset & Base ──
