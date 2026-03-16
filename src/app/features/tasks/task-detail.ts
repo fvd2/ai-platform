@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Task, TaskRun } from '../../core/models/task.model';
 import { StatusBadgeComponent } from '../../shared/status-badge';
@@ -307,9 +307,9 @@ export class TaskDetailComponent {
   protected readonly promptDraft = signal('');
 
   constructor() {
-    // Initialize prompt draft when task changes
-    const taskInput = this.task;
-    // We'll use a computed to reactively reset draft when entering edit mode
+    effect(() => {
+      this.promptDraft.set(this.task().prompt);
+    });
   }
 
   protected onSavePrompt(): void {

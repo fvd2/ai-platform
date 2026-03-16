@@ -1,0 +1,51 @@
+<div class="triggers">
+  <div class="triggers__sidebar">
+    <app-trigger-list
+      [triggers]="triggers()"
+      [activeId]="activeId()"
+      (create)="onCreateClick()"
+      (select)="onSelectTrigger($event)"
+      (remove)="onDeleteTrigger($event)"
+    />
+  </div>
+
+  <div class="triggers__main">
+    @if (error()) {
+      <div class="triggers__error">
+        <span>{{ error() }}</span>
+        <button
+          class="triggers__error-dismiss"
+          (click)="dismissError()"
+          aria-label="Dismiss error"
+        >
+          &times;
+        </button>
+      </div>
+    }
+
+    @if (showForm()) {
+      <app-trigger-form (create)="onCreate($event)" (cancel)="onCancelForm()" />
+    } @else if (activeTrigger(); as trigger) {
+      <app-trigger-detail
+        [trigger]="trigger"
+        [runs]="runs()"
+        (toggle)="onToggle()"
+        (fireNow)="onFireNow()"
+        (delete)="onDelete()"
+        (updatePrompt)="onUpdatePrompt($event)"
+      />
+    } @else {
+      <div class="triggers__empty">
+        <app-empty-state
+          icon="\u26A1"
+          title="Data Triggers"
+          description="Set up event-driven AI workflows. Create webhooks, poll URLs for changes, or fire triggers manually."
+        >
+          <button class="triggers__empty-btn" (click)="onCreateClick()">
+            Create Your First Trigger
+          </button>
+        </app-empty-state>
+      </div>
+    }
+  </div>
+</div>
