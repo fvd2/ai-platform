@@ -65,9 +65,17 @@ export const chatRoutes: FastifyPluginAsync = async (fastify) => {
         const result = streamChatResponse(history);
         let fullContent = '';
 
-        for await (const chunk of (await result).textStream) {
-          fullContent += chunk;
-          reply.raw.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+        for await (const part of result.fullStream) {
+          if (part.type === 'text-delta') {
+            fullContent += part.textDelta;
+            reply.raw.write(`data: ${JSON.stringify({ text: part.textDelta })}\n\n`);
+          } else if (part.type === 'error') {
+            fastify.log.error(part.error, 'AI stream error');
+            const msg = (part.error as Error)?.message ?? 'AI request failed';
+            reply.raw.write(`data: ${JSON.stringify({ error: msg })}\n\n`);
+            reply.raw.end();
+            return;
+          }
         }
 
         // Save assistant message
@@ -91,6 +99,7 @@ export const chatRoutes: FastifyPluginAsync = async (fastify) => {
         reply.raw.write(`data: ${JSON.stringify({ done: true })}\n\n`);
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        fastify.log.error(error, 'Stream chat error');
         reply.raw.write(`data: ${JSON.stringify({ error: errorMsg })}\n\n`);
       }
 

@@ -34,7 +34,7 @@ export default defineConfig({
     },
     {
       command: 'cd api && pnpm dev',
-      url: 'http://localhost:3000/api/health',
+      url: 'http://localhost:3001/api/health',
       reuseExistingServer: !process.env['CI'],
       timeout: 30_000,
     },

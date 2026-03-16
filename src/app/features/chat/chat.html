@@ -28,15 +28,25 @@
         }
       </div>
 
+      @if (error()) {
+        <div class="chat__error">
+          <span>{{ error() }}</span>
+          <button class="chat__error-dismiss" (click)="dismissError()" aria-label="Dismiss error">
+            &times;
+          </button>
+        </div>
+      }
+
       <div class="chat__input-area">
         @if (isStreaming()) {
           <button class="chat__cancel-btn" (click)="onCancel()">Stop</button>
         }
         <div class="chat__input-row">
           <textarea
+            #textareaEl
             class="chat__input"
             [value]="inputText()"
-            (input)="inputText.set($any($event.target).value)"
+            (input)="onInput($event)"
             (keydown)="onKeydown($event)"
             placeholder="Type a message..."
             rows="1"

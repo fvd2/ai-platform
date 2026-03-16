@@ -12,6 +12,7 @@ export class ChatService {
   readonly messages = signal<Message[]>([]);
   readonly streamingContent = signal('');
   readonly isStreaming = signal(false);
+  readonly error = signal<string | null>(null);
 
   private abortController: AbortController | null = null;
 
@@ -65,6 +66,7 @@ export class ChatService {
     this.streamingContent.set('');
 
     this.abortController = new AbortController();
+    this.error.set(null);
 
     try {
       const response = await this.api.streamPost(
@@ -96,13 +98,18 @@ export class ChatService {
           if (data === '[DONE]') continue;
 
           try {
-            const parsed = JSON.parse(data) as { text?: string; done?: boolean };
+            const parsed = JSON.parse(data) as { text?: string; done?: boolean; error?: string };
+            if (parsed.error) {
+              throw new Error(parsed.error);
+            }
             if (parsed.text) {
               fullContent += parsed.text;
               this.streamingContent.set(fullContent);
             }
-          } catch {
-            // Skip malformed JSON chunks
+          } catch (e) {
+            if (e instanceof Error && e.message !== 'Unexpected end of JSON input') {
+              throw e;
+            }
           }
         }
       }
@@ -124,6 +131,7 @@ export class ChatService {
     } catch (error) {
       if ((error as Error).name !== 'AbortError') {
         console.error('Stream error:', error);
+        this.error.set('Failed to get a response. Please try again.');
       }
     } finally {
       this.isStreaming.set(false);
@@ -134,5 +142,9 @@ export class ChatService {
 
   cancelStream(): void {
     this.abortController?.abort();
+  }
+
+  clearError(): void {
+    this.error.set(null);
   }
 }

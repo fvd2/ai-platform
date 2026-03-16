@@ -102,12 +102,17 @@ import { Conversation } from '../../core/models/conversation.model';
       opacity: 0;
       transition: opacity $transition-fast, color $transition-fast;
 
-      .list__item:hover & {
+      .list__item:hover &,
+      .list__item--active & {
         opacity: 1;
       }
 
       &:hover {
         color: var(--color-error);
+      }
+
+      @media (hover: none) {
+        opacity: 0.6;
       }
     }
 

@@ -1,3 +1,4 @@
+import dotenv from 'dotenv';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import fastifyStatic from '@fastify/static';
@@ -8,6 +9,9 @@ import { initDb } from './db/index.js';
 import { chatRoutes } from './routes/chat.routes.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Load .env from api/ directory (one level up from src/)
+dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const app = Fastify({ logger: true });
 
@@ -35,7 +39,7 @@ if (existsSync(publicDir)) {
   });
 }
 
-const port = parseInt(process.env['PORT'] ?? '3000', 10);
+const port = parseInt(process.env['PORT'] ?? '3001', 10);
 await app.listen({ port, host: '0.0.0.0' });
 
 console.log(`API server running on http://localhost:${port}`);

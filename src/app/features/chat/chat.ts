@@ -2,12 +2,14 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
   effect,
   inject,
   signal,
   viewChild,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ChatService } from '../../core/services/chat.service';
 import { ConversationListComponent } from './conversation-list';
@@ -24,14 +26,17 @@ export class ChatComponent {
   private readonly chatService = inject(ChatService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly messagesContainer = viewChild<ElementRef<HTMLElement>>('messagesContainer');
+  private readonly textareaEl = viewChild<ElementRef<HTMLTextAreaElement>>('textareaEl');
 
   protected readonly conversations = this.chatService.conversations;
   protected readonly activeConversation = this.chatService.activeConversation;
   protected readonly messages = this.chatService.messages;
   protected readonly streamingContent = this.chatService.streamingContent;
   protected readonly isStreaming = this.chatService.isStreaming;
+  protected readonly error = this.chatService.error;
 
   protected readonly activeId = computed(() => this.activeConversation()?.id ?? null);
   protected readonly inputText = signal('');
@@ -47,9 +52,8 @@ export class ChatComponent {
       this.scrollToBottom();
     });
 
-    // Handle route params
-    effect(() => {
-      const params = this.route.snapshot.paramMap;
+    // Handle route params reactively
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const id = params.get('conversationId');
       if (id) {
         this.chatService.selectConversation(id);
@@ -85,6 +89,7 @@ export class ChatComponent {
     }
 
     this.inputText.set('');
+    this.resetTextareaHeight();
     await this.chatService.sendMessage(text);
   }
 
@@ -92,6 +97,28 @@ export class ChatComponent {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       this.onSend();
+    }
+  }
+
+  protected onInput(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    this.inputText.set(textarea.value);
+    this.autoGrowTextarea(textarea);
+  }
+
+  protected dismissError(): void {
+    this.chatService.clearError();
+  }
+
+  private autoGrowTextarea(textarea: HTMLTextAreaElement): void {
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
+  }
+
+  private resetTextareaHeight(): void {
+    const textarea = this.textareaEl()?.nativeElement;
+    if (textarea) {
+      textarea.style.height = 'auto';
     }
   }
 
