@@ -6,7 +6,7 @@ test.describe('Chat', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('AI Platform')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'AI Platform' })).toBeVisible();
     await expect(page.getByText('Select a conversation or start a new one.')).toBeVisible();
 
     await takeScreenshot(page, 'chat-empty-state');

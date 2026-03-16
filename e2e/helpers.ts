@@ -1,9 +1,7 @@
 import { type Page } from '@playwright/test';
-import { mkdirSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
 const SCREENSHOT_DIR = join(__dirname, 'screenshots');
 
 export async function takeScreenshot(page: Page, name: string): Promise<void> {
