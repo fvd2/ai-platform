@@ -1,0 +1,63 @@
+<div class="chat">
+  <div class="chat__sidebar">
+    <app-conversation-list
+      [conversations]="conversations()"
+      [activeId]="activeId()"
+      (create)="onCreateConversation()"
+      (select)="onSelectConversation($event)"
+      (remove)="onDeleteConversation($event)"
+    />
+  </div>
+
+  <div class="chat__main">
+    @if (activeConversation()) {
+      <div class="chat__messages" #messagesContainer>
+        @for (msg of messages(); track msg.id) {
+          <app-message-bubble [message]="msg" />
+        }
+
+        @if (isStreaming() && streamingContent()) {
+          <div class="chat__streaming">
+            <div class="chat__streaming-role">AI</div>
+            <div class="chat__streaming-content">{{ streamingContent() }}</div>
+          </div>
+        }
+
+        @if (isStreaming() && !streamingContent()) {
+          <div class="chat__thinking">Thinking...</div>
+        }
+      </div>
+
+      <div class="chat__input-area">
+        @if (isStreaming()) {
+          <button class="chat__cancel-btn" (click)="onCancel()">Stop</button>
+        }
+        <div class="chat__input-row">
+          <textarea
+            class="chat__input"
+            [value]="inputText()"
+            (input)="inputText.set($any($event.target).value)"
+            (keydown)="onKeydown($event)"
+            placeholder="Type a message..."
+            rows="1"
+            [disabled]="isStreaming()"
+          ></textarea>
+          <button
+            class="chat__send-btn"
+            (click)="onSend()"
+            [disabled]="isStreaming() || !inputText().trim()"
+            aria-label="Send message"
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    } @else {
+      <div class="chat__empty">
+        <h2>AI Platform</h2>
+        <p>Select a conversation or start a new one.</p>
+        <button class="chat__empty-btn" (click)="onCreateConversation()">New Chat</button>
+      </div>
+    }
+  </div>
+</div>

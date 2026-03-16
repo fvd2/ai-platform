@@ -1,0 +1,30 @@
+services:
+  ai-platform:
+    build: .
+    restart: unless-stopped
+    expose:
+      - "3000"
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=vitaal-shared"
+      # HTTPS router
+      - "traefik.http.routers.ai-platform.rule=Host(`ai.vandam.es`)"
+      - "traefik.http.routers.ai-platform.entrypoints=websecure"
+      - "traefik.http.routers.ai-platform.tls.certresolver=letsencrypt"
+      - "traefik.http.services.ai-platform.loadbalancer.server.port=3000"
+      # HTTP → HTTPS redirect
+      - "traefik.http.routers.ai-platform-http.rule=Host(`ai.vandam.es`)"
+      - "traefik.http.routers.ai-platform-http.entrypoints=web"
+      - "traefik.http.routers.ai-platform-http.middlewares=ai-platform-redirect"
+      - "traefik.http.middlewares.ai-platform-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.ai-platform-redirect.redirectscheme.permanent=true"
+    networks:
+      - vitaal-shared
+
+networks:
+  vitaal-shared:
+    external: true
