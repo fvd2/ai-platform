@@ -1,0 +1,46 @@
+<div class="tasks">
+  <div class="tasks__sidebar">
+    <app-task-list
+      [tasks]="tasks()"
+      [activeId]="activeId()"
+      (create)="onCreateClick()"
+      (select)="onSelectTask($event)"
+      (remove)="onDeleteTask($event)"
+    />
+  </div>
+
+  <div class="tasks__main">
+    @if (error()) {
+      <div class="tasks__error">
+        <span>{{ error() }}</span>
+        <button class="tasks__error-dismiss" (click)="dismissError()" aria-label="Dismiss error">
+          &times;
+        </button>
+      </div>
+    }
+
+    @if (showForm()) {
+      <app-task-form (create)="onCreate($event)" (cancel)="onCancelForm()" />
+    } @else if (activeTask(); as task) {
+      <app-task-detail
+        [task]="task"
+        [runs]="runs()"
+        (toggle)="onToggle()"
+        (runNow)="onRunNow()"
+        (delete)="onDelete()"
+        (updatePrompt)="onUpdatePrompt($event)"
+        (updateSchedule)="onUpdateSchedule($event)"
+      />
+    } @else {
+      <div class="tasks__empty">
+        <app-empty-state
+          icon="\u23F0"
+          title="Scheduled Tasks"
+          description="Create recurring AI tasks that run on a schedule. Set up daily digests, weekly reports, health checks, and more."
+        >
+          <button class="tasks__empty-btn" (click)="onCreateClick()">Create Your First Task</button>
+        </app-empty-state>
+      </div>
+    }
+  </div>
+</div>

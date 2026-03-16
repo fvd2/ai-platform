@@ -69,14 +69,27 @@ import { DatePipe } from '@angular/common';
       flex-shrink: 0;
     }
 
-    .run-item--success .run-item__status,
-    .run-item__header:has(.run-item__status) {
-      // Status colors applied via parent modifier or adjacent logic
+    :host(.run-item-host--success) .run-item__status {
+      color: var(--color-success);
     }
 
-    // Use individual selectors for status coloring
-    :host:has([class='run-item']) {
-      display: contents;
+    :host(.run-item-host--error) .run-item__status {
+      color: var(--color-error-text);
+    }
+
+    :host(.run-item-host--running) .run-item__status {
+      color: var(--color-status-running);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%,
+      100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.4;
+      }
     }
 
     .run-item__time {
