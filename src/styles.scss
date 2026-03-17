@@ -96,6 +96,53 @@
   --color-status-running: #{$blue-500};
 }
 
+// ── Dark Theme ──
+[data-theme='dark'] {
+  --color-primary: #{$blue-400};
+  --color-primary-light: #{$blue-900};
+  --color-primary-lighter: #{$blue-800};
+  --color-primary-dark: #{$blue-300};
+
+  --color-success: #{$green-400};
+  --color-success-light: #{$green-800};
+  --color-success-text: #{$green-300};
+
+  --color-warning: #{$amber-400};
+  --color-warning-light: #{$amber-800};
+  --color-warning-text: #{$amber-300};
+
+  --color-error: #{$red-400};
+  --color-error-light: #{$red-800};
+  --color-error-text: #{$red-300};
+
+  --color-bg-primary: #{$gray-900};
+  --color-bg-secondary: #{$gray-800};
+  --color-bg-tertiary: #{$gray-700};
+  --color-bg-app: #0b1120;
+
+  --color-text-primary: #{$gray-100};
+  --color-text-secondary: #{$gray-300};
+  --color-text-muted: #{$gray-500};
+  --color-text-inverse: #{$gray-900};
+
+  --color-border: #{$gray-700};
+  --color-border-light: #{$gray-800};
+  --color-border-focus: #{$blue-400};
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+
+  --color-bg-dark: #{$gray-900};
+  --color-purple: #a78bfa;
+  --color-purple-light: #1e1533;
+
+  --color-status-active: #{$green-400};
+  --color-status-paused: #{$gray-500};
+  --color-status-error: #{$red-400};
+  --color-status-running: #{$blue-400};
+}
+
 // ── Reset & Base ──
 *,
 *::before,
@@ -117,6 +164,9 @@ body {
   background: var(--color-bg-app);
   line-height: var(--line-height-normal);
   min-height: 100dvh;
+  transition:
+    background $transition-base,
+    color $transition-base;
 }
 
 a {
