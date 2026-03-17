@@ -30,5 +30,6 @@ COPY api/src/db/schema.sql ./dist/db/schema.sql
 # Copy built Angular app
 COPY --from=frontend-build /app/dist/ai-platform/browser ./public
 
+ENV PORT=3000
 EXPOSE 3000
 CMD ["node", "dist/server.js"]
