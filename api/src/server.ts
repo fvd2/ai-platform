@@ -7,6 +7,9 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { initDb } from './db/index.js';
 import { chatRoutes } from './routes/chat.routes.js';
+import { taskRoutes } from './routes/task.routes.js';
+import { triggerRoutes } from './routes/trigger.routes.js';
+import { artifactRoutes } from './routes/artifact.routes.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -20,6 +23,9 @@ await app.register(cors, { origin: true });
 initDb();
 
 await app.register(chatRoutes, { prefix: '/api/chat' });
+await app.register(taskRoutes, { prefix: '/api/tasks' });
+await app.register(triggerRoutes, { prefix: '/api/triggers' });
+await app.register(artifactRoutes, { prefix: '/api/artifacts' });
 
 // Health check
 app.get('/api/health', async () => ({ status: 'ok' }));
