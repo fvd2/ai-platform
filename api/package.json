@@ -7,7 +7,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "echo \"No tests yet\" && exit 0"
+    "test": "vitest run"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.0.0",
@@ -16,13 +16,17 @@
     "ai": "^4.0.0",
     "better-sqlite3": "^11.0.0",
     "dotenv": "^17.3.1",
-    "fastify": "^5.0.0"
+    "fastify": "^5.0.0",
+    "node-cron": "^3.0.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.0",
     "@types/node": "^22.0.0",
+    "@types/node-cron": "^3.0.0",
     "tsx": "^4.0.0",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "vitest": "^4.0.8"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

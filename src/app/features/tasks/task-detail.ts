@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, effect, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Task, TaskRun } from '../../core/models/task.model';
+import { PromptAnalysis } from '../../core/models/analytics.model';
+import { AnalyticsService } from '../../core/services/analytics.service';
 import { StatusBadgeComponent } from '../../shared/status-badge';
 import { ToggleComponent } from '../../shared/toggle';
 import { PromptEditorComponent } from '../../shared/prompt-editor';
@@ -60,6 +62,45 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
           <button class="detail__save-btn" (click)="onSavePrompt()">Save Prompt</button>
         } @else {
           <pre class="detail__prompt-display">{{ task().prompt }}</pre>
+        }
+        <div class="detail__analyze-row">
+          <button
+            class="detail__analyze-btn"
+            [disabled]="analyzing()"
+            (click)="onAnalyzePrompt()"
+          >
+            @if (analyzing()) {
+              <span class="detail__spinner"></span>
+              Analyzing...
+            } @else {
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              Analyze &amp; Improve
+            }
+          </button>
+        </div>
+        @if (analysis()) {
+          <div class="detail__analysis-panel">
+            <div class="detail__analysis-header">
+              <h4 class="detail__analysis-title">Prompt Analysis</h4>
+              <button class="detail__analysis-close" (click)="clearAnalysis()">&times;</button>
+            </div>
+            <p class="detail__analysis-text">{{ analysis()!.analysis }}</p>
+            @if (analysis()!.suggestions.length > 0) {
+              <h5 class="detail__analysis-subtitle">Suggestions</h5>
+              <ul class="detail__analysis-suggestions">
+                @for (suggestion of analysis()!.suggestions; track suggestion) {
+                  <li>{{ suggestion }}</li>
+                }
+              </ul>
+            }
+            @if (analysis()!.revisedPrompt) {
+              <h5 class="detail__analysis-subtitle">Revised Prompt</h5>
+              <pre class="detail__analysis-revised">{{ analysis()!.revisedPrompt }}</pre>
+              <button class="detail__apply-btn" (click)="onApplyRevised()">Apply Revised Prompt</button>
+            }
+          </div>
         }
       </section>
 
@@ -355,9 +396,151 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
       padding: $spacing-xl;
       margin: 0;
     }
+
+    .detail__analyze-row {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      margin-top: $spacing-xs;
+    }
+
+    .detail__analyze-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: $spacing-xs;
+      padding: $spacing-xs $spacing-md;
+      background: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: $radius-lg;
+      font-size: var(--text-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-primary);
+      cursor: pointer;
+      transition: all $transition-fast;
+
+      &:hover:not(:disabled) {
+        background: var(--color-primary-lighter);
+        border-color: var(--color-primary-light);
+      }
+
+      &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+    }
+
+    .detail__spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--color-border);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .detail__analysis-panel {
+      background: var(--color-bg-secondary);
+      border: 1px solid var(--color-border-light);
+      border-radius: $radius-lg;
+      padding: $spacing-md;
+      margin-top: $spacing-sm;
+    }
+
+    .detail__analysis-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: $spacing-sm;
+    }
+
+    .detail__analysis-title {
+      font-size: var(--text-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+      margin: 0;
+    }
+
+    .detail__analysis-close {
+      background: none;
+      border: none;
+      font-size: var(--text-lg);
+      color: var(--color-text-muted);
+      cursor: pointer;
+      padding: 0 $spacing-xs;
+      line-height: 1;
+
+      &:hover {
+        color: var(--color-text-primary);
+      }
+    }
+
+    .detail__analysis-text {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: var(--line-height-relaxed);
+      margin: 0 0 $spacing-sm;
+    }
+
+    .detail__analysis-subtitle {
+      font-size: var(--text-xs);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+      margin: $spacing-sm 0 $spacing-xs;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .detail__analysis-suggestions {
+      margin: 0;
+      padding-left: $spacing-md;
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: var(--line-height-relaxed);
+
+      li {
+        margin-bottom: $spacing-2xs;
+      }
+    }
+
+    .detail__analysis-revised {
+      background: var(--color-bg-primary);
+      border: 1px solid var(--color-border-light);
+      border-radius: $radius-md;
+      padding: $spacing-sm;
+      font-size: var(--text-sm);
+      line-height: var(--line-height-relaxed);
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 0;
+    }
+
+    .detail__apply-btn {
+      margin-top: $spacing-sm;
+      padding: $spacing-xs $spacing-md;
+      background: var(--gradient-primary);
+      color: #fff;
+      border: none;
+      border-radius: $radius-lg;
+      font-size: var(--text-sm);
+      font-weight: var(--font-weight-medium);
+      cursor: pointer;
+      transition: all $transition-fast;
+      box-shadow: $shadow-sm;
+
+      &:hover {
+        box-shadow: $shadow-md;
+      }
+    }
   `,
 })
 export class TaskDetailComponent {
+  private readonly analyticsService = inject(AnalyticsService);
+
   readonly task = input.required<Task>();
   readonly runs = input.required<TaskRun[]>();
 
@@ -370,6 +553,8 @@ export class TaskDetailComponent {
   protected readonly editingPrompt = signal(false);
   protected readonly editingSchedule = signal(false);
   protected readonly promptDraft = signal('');
+  protected readonly analyzing = this.analyticsService.analyzing;
+  protected readonly analysis = signal<PromptAnalysis | null>(null);
 
   constructor() {
     effect(() => {
@@ -385,6 +570,25 @@ export class TaskDetailComponent {
   protected onScheduleChange(event: { schedule: string; description: string }): void {
     this.updateSchedule.emit(event);
     this.editingSchedule.set(false);
+  }
+
+  protected async onAnalyzePrompt(): Promise<void> {
+    const task = this.task();
+    const result = await this.analyticsService.analyzePrompt(task.prompt, 'task', task.id);
+    this.analysis.set(result);
+  }
+
+  protected onApplyRevised(): void {
+    const revised = this.analysis()?.revisedPrompt;
+    if (revised) {
+      this.promptDraft.set(revised);
+      this.editingPrompt.set(true);
+      this.analysis.set(null);
+    }
+  }
+
+  protected clearAnalysis(): void {
+    this.analysis.set(null);
   }
 
   protected truncate(text: string, maxLength: number): string {

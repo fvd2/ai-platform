@@ -1,18 +1,22 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { Message } from '../../core/models/message.model';
+import { DynamicBlock } from '../../core/models/dynamic-block.model';
+import { DynamicBlockService } from '../../core/services/dynamic-block.service';
 import { ArtifactCardComponent } from '../../shared/artifact-card';
+import { DynamicBlockComponent } from '../../shared/blocks/dynamic-block';
 
 interface MessageSegment {
-  type: 'text' | 'artifact';
+  type: 'text' | 'artifact' | 'dynamic';
   content: string;
   language?: string;
   title?: string;
+  block?: DynamicBlock;
 }
 
 @Component({
   selector: 'app-message-bubble',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ArtifactCardComponent],
+  imports: [ArtifactCardComponent, DynamicBlockComponent],
   template: `
     <div class="bubble" [class.bubble--user]="message().role === 'user'">
       @if (message().role !== 'user') {
@@ -27,6 +31,8 @@ interface MessageSegment {
           @for (segment of segments(); track $index) {
             @if (segment.type === 'text') {
               <span class="bubble__text">{{ segment.content }}</span>
+            } @else if (segment.type === 'dynamic') {
+              <app-dynamic-block [block]="segment.block!" />
             } @else {
               <app-artifact-card
                 [title]="segment.title || 'Code'"
@@ -129,20 +135,53 @@ interface MessageSegment {
 })
 export class MessageBubbleComponent {
   readonly message = input.required<Message>();
+  private readonly dynamicBlockService = inject(DynamicBlockService);
 
   readonly segments = computed<MessageSegment[]>(() => {
     const msg = this.message();
     if (msg.role === 'user') {
       return [{ type: 'text', content: msg.content }];
     }
-    return parseMessageSegments(msg.content);
+    return parseMessageSegments(msg.content, this.dynamicBlockService);
   });
 }
 
 const CODE_BLOCK_REGEX = /```(\w*)\n([\s\S]*?)```/g;
 const MIN_CODE_LINES = 5;
 
-function parseMessageSegments(content: string): MessageSegment[] {
+function parseMessageSegments(
+  content: string,
+  dynamicBlockService: DynamicBlockService,
+): MessageSegment[] {
+  const segments: MessageSegment[] = [];
+
+  // First: extract dynamic blocks and replace with placeholders
+  const dynamicBlocks = dynamicBlockService.parseBlocks(content);
+  if (dynamicBlocks.length > 0) {
+    let lastIndex = 0;
+    for (const parsed of dynamicBlocks) {
+      if (parsed.startIndex > lastIndex) {
+        const textBefore = content.slice(lastIndex, parsed.startIndex).trim();
+        if (textBefore) {
+          segments.push(...parseCodeBlocks(textBefore));
+        }
+      }
+      segments.push({ type: 'dynamic', content: '', block: parsed.block });
+      lastIndex = parsed.endIndex;
+    }
+    if (lastIndex < content.length) {
+      const remaining = content.slice(lastIndex).trim();
+      if (remaining) {
+        segments.push(...parseCodeBlocks(remaining));
+      }
+    }
+    return segments.length > 0 ? segments : [{ type: 'text', content }];
+  }
+
+  return parseCodeBlocks(content);
+}
+
+function parseCodeBlocks(content: string): MessageSegment[] {
   const segments: MessageSegment[] = [];
   let lastIndex = 0;
 
@@ -152,7 +191,6 @@ function parseMessageSegments(content: string): MessageSegment[] {
     const code = match[2].trimEnd();
     const lineCount = code.split('\n').length;
 
-    // Text before the code block
     if (matchStart > lastIndex) {
       const text = content.slice(lastIndex, matchStart).trim();
       if (text) {
@@ -161,7 +199,6 @@ function parseMessageSegments(content: string): MessageSegment[] {
     }
 
     if (lineCount >= MIN_CODE_LINES) {
-      // Promote to artifact
       const ext = language || 'txt';
       segments.push({
         type: 'artifact',
@@ -170,14 +207,12 @@ function parseMessageSegments(content: string): MessageSegment[] {
         title: `snippet.${ext}`,
       });
     } else {
-      // Keep as inline text
       segments.push({ type: 'text', content: '```' + language + '\n' + code + '\n```' });
     }
 
     lastIndex = matchStart + match[0].length;
   }
 
-  // Remaining text
   if (lastIndex < content.length) {
     const text = content.slice(lastIndex).trim();
     if (text) {

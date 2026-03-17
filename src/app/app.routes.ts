@@ -23,6 +23,11 @@ export const routes: Routes = [
           import('./features/triggers/triggers').then((m) => m.TriggersComponent),
       },
       {
+        path: 'artifacts',
+        loadComponent: () =>
+          import('./features/artifacts/artifacts').then((m) => m.ArtifactsComponent),
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/settings').then((m) => m.SettingsComponent),

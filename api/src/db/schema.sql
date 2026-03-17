@@ -77,3 +77,52 @@ CREATE TABLE IF NOT EXISTS artifacts (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_artifacts_source ON artifacts(source_type, source_id);
+
+CREATE TABLE IF NOT EXISTS traces (
+  id TEXT PRIMARY KEY,
+  source TEXT NOT NULL CHECK (source IN ('chat', 'task', 'trigger')),
+  source_id TEXT NOT NULL,
+  run_id TEXT,
+  model TEXT NOT NULL,
+  system_prompt TEXT,
+  user_input TEXT NOT NULL,
+  assistant_output TEXT,
+  input_tokens INTEGER,
+  output_tokens INTEGER,
+  total_tokens INTEGER,
+  latency_ms INTEGER,
+  status TEXT NOT NULL CHECK (status IN ('success', 'error')) DEFAULT 'success',
+  error TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_traces_source ON traces(source, source_id);
+CREATE INDEX IF NOT EXISTS idx_traces_created ON traces(created_at);
+
+-- Full-text search for artifacts
+CREATE VIRTUAL TABLE IF NOT EXISTS artifacts_fts USING fts5(title, content, content=artifacts, content_rowid=rowid);
+
+-- Keep FTS in sync with artifacts table
+CREATE TRIGGER IF NOT EXISTS artifacts_ai AFTER INSERT ON artifacts BEGIN
+  INSERT INTO artifacts_fts(rowid, title, content) VALUES (NEW.rowid, NEW.title, NEW.content);
+END;
+
+CREATE TRIGGER IF NOT EXISTS artifacts_ad AFTER DELETE ON artifacts BEGIN
+  INSERT INTO artifacts_fts(artifacts_fts, rowid, title, content) VALUES ('delete', OLD.rowid, OLD.title, OLD.content);
+END;
+
+CREATE TRIGGER IF NOT EXISTS artifacts_au AFTER UPDATE ON artifacts BEGIN
+  INSERT INTO artifacts_fts(artifacts_fts, rowid, title, content) VALUES ('delete', OLD.rowid, OLD.title, OLD.content);
+  INSERT INTO artifacts_fts(rowid, title, content) VALUES (NEW.rowid, NEW.title, NEW.content);
+END;
+
+CREATE TABLE IF NOT EXISTS oauth_tokens (
+  id TEXT PRIMARY KEY,
+  provider TEXT NOT NULL DEFAULT 'microsoft',
+  access_token TEXT NOT NULL,
+  refresh_token TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  scope TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);

@@ -2,6 +2,7 @@ import { FastifyPluginAsync } from 'fastify';
 import { randomUUID } from 'crypto';
 import { getDb } from '../db/index.js';
 import { streamChatResponse, type ChatMessage } from '../services/ai.service.js';
+import { extractArtifacts } from '../services/artifact-extractor.service.js';
 
 export const chatRoutes: FastifyPluginAsync = async (fastify) => {
   // List conversations
@@ -83,6 +84,33 @@ export const chatRoutes: FastifyPluginAsync = async (fastify) => {
         db.prepare(
           'INSERT INTO messages (id, conversation_id, role, content) VALUES (?, ?, ?, ?)',
         ).run(assistantMsgId, id, 'assistant', fullContent);
+
+        // Extract and persist artifacts from the AI response
+        const extracted = extractArtifacts(fullContent);
+        const insertArtifact = db.prepare(
+          `INSERT INTO artifacts (id, title, type, language, content, source_type, source_id)
+           VALUES (?, ?, ?, ?, ?, 'chat', ?)`,
+        );
+        const artifactIds: string[] = [];
+        for (const artifact of extracted) {
+          const artifactId = randomUUID();
+          insertArtifact.run(
+            artifactId,
+            artifact.title,
+            artifact.type,
+            artifact.language ?? null,
+            artifact.content,
+            id,
+          );
+          artifactIds.push(artifactId);
+        }
+
+        // Send artifact IDs to the client so it can update local state
+        if (artifactIds.length > 0) {
+          reply.raw.write(
+            `data: ${JSON.stringify({ artifacts: artifactIds })}\n\n`,
+          );
+        }
 
         // Auto-title: use first user message as title if conversation is still "New conversation"
         const conv = db.prepare('SELECT title FROM conversations WHERE id = ?').get(id) as { title: string } | undefined;
