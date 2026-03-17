@@ -137,6 +137,11 @@ import { PromptEditorComponent } from '../../shared/prompt-editor';
       display: flex;
       flex-direction: column;
       gap: $spacing-lg;
+
+      @include mobile {
+        padding: $spacing-md;
+        gap: $spacing-md;
+      }
     }
 
     .form__title {
@@ -169,6 +174,10 @@ import { PromptEditorComponent } from '../../shared/prompt-editor';
       outline: none;
       transition: border-color $transition-fast;
 
+      @include mobile {
+        font-size: 16px;
+      }
+
       &:focus {
         border-color: var(--color-border-focus);
         box-shadow: 0 0 0 3px var(--color-primary-light);
@@ -183,6 +192,10 @@ import { PromptEditorComponent } from '../../shared/prompt-editor';
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: $spacing-sm;
+
+      @include mobile {
+        grid-template-columns: 1fr;
+      }
     }
 
     .form__type-card {
@@ -196,6 +209,11 @@ import { PromptEditorComponent } from '../../shared/prompt-editor';
       background: var(--color-bg-primary);
       cursor: pointer;
       transition: all $transition-fast;
+
+      @include mobile {
+        flex-direction: row;
+        padding: $spacing-sm $spacing-md;
+      }
 
       &:hover:not(.form__type-card--active) {
         border-color: var(--color-border-focus);

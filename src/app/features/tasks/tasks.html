@@ -1,5 +1,5 @@
 <div class="tasks">
-  <div class="tasks__sidebar">
+  <div class="tasks__sidebar" [class.tasks__sidebar--open]="sidebarOpen()">
     <app-task-list
       [tasks]="tasks()"
       [activeId]="activeId()"
@@ -8,8 +8,18 @@
       (remove)="onDeleteTask($event)"
     />
   </div>
+  @if (sidebarOpen()) {
+    <div class="tasks__overlay" (click)="sidebarOpen.set(false)"></div>
+  }
 
   <div class="tasks__main">
+    <div class="tasks__mobile-header">
+      <button class="tasks__sidebar-toggle" (click)="sidebarOpen.set(!sidebarOpen())" aria-label="Toggle task list">
+        ☰
+      </button>
+      <span class="tasks__mobile-title">Tasks</span>
+    </div>
+
     @if (error()) {
       <div class="tasks__error">
         <span>{{ error() }}</span>
@@ -34,7 +44,7 @@
     } @else {
       <div class="tasks__empty">
         <app-empty-state
-          icon="\u23F0"
+          icon="⏰"
           title="Scheduled Tasks"
           description="Create recurring AI tasks that run on a schedule. Set up daily digests, weekly reports, health checks, and more."
         >

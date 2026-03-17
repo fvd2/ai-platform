@@ -23,6 +23,7 @@ export class TriggersComponent {
   protected readonly error = this.triggerService.error;
 
   protected readonly showForm = signal(false);
+  protected readonly sidebarOpen = signal(false);
   protected readonly activeId = computed(() => this.activeTrigger()?.id ?? null);
 
   constructor() {
@@ -35,6 +36,7 @@ export class TriggersComponent {
 
   protected async onSelectTrigger(id: string): Promise<void> {
     this.showForm.set(false);
+    this.sidebarOpen.set(false);
     await this.triggerService.selectTrigger(id);
   }
 

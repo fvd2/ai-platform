@@ -1,5 +1,5 @@
 <div class="triggers">
-  <div class="triggers__sidebar">
+  <div class="triggers__sidebar" [class.triggers__sidebar--open]="sidebarOpen()">
     <app-trigger-list
       [triggers]="triggers()"
       [activeId]="activeId()"
@@ -8,8 +8,18 @@
       (remove)="onDeleteTrigger($event)"
     />
   </div>
+  @if (sidebarOpen()) {
+    <div class="triggers__overlay" (click)="sidebarOpen.set(false)"></div>
+  }
 
   <div class="triggers__main">
+    <div class="triggers__mobile-header">
+      <button class="triggers__sidebar-toggle" (click)="sidebarOpen.set(!sidebarOpen())" aria-label="Toggle trigger list">
+        ☰
+      </button>
+      <span class="triggers__mobile-title">Triggers</span>
+    </div>
+
     @if (error()) {
       <div class="triggers__error">
         <span>{{ error() }}</span>
@@ -37,7 +47,7 @@
     } @else {
       <div class="triggers__empty">
         <app-empty-state
-          icon="\u26A1"
+          icon="⚡"
           title="Data Triggers"
           description="Set up event-driven AI workflows. Create webhooks, poll URLs for changes, or fire triggers manually."
         >

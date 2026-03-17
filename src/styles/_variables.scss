@@ -99,3 +99,29 @@ $bp-xl: 1280px;
 $nav-rail-width: 64px;
 $sub-sidebar-width: 280px;
 $artifact-panel-width: 420px;
+$mobile-bottom-nav-height: 56px;
+
+// ── Responsive Mixins ──
+@mixin mobile {
+  @media (max-width: #{$bp-md - 1px}) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: $bp-md) and (max-width: #{$bp-lg - 1px}) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: $bp-lg) {
+    @content;
+  }
+}
+
+@mixin mobile-and-tablet {
+  @media (max-width: #{$bp-lg - 1px}) {
+    @content;
+  }
+}

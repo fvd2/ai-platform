@@ -22,6 +22,7 @@ export class TasksComponent {
   protected readonly error = this.taskService.error;
 
   protected readonly showForm = signal(false);
+  protected readonly sidebarOpen = signal(false);
   protected readonly activeId = computed(() => this.activeTask()?.id ?? null);
 
   constructor() {
@@ -34,6 +35,7 @@ export class TasksComponent {
 
   protected async onSelectTask(id: string): Promise<void> {
     this.showForm.set(false);
+    this.sidebarOpen.set(false);
     await this.taskService.selectTask(id);
   }
 

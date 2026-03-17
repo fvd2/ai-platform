@@ -156,6 +156,11 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
       display: flex;
       flex-direction: column;
       gap: $spacing-lg;
+
+      @include mobile {
+        padding: $spacing-md;
+        gap: $spacing-md;
+      }
     }
 
     .detail__header {
@@ -165,12 +170,18 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
       gap: $spacing-md;
       padding-bottom: $spacing-lg;
       border-bottom: 1px solid var(--color-border-light);
+
+      @include mobile {
+        flex-direction: column;
+        padding-bottom: $spacing-md;
+      }
     }
 
     .detail__header-info {
       display: flex;
       flex-direction: column;
       gap: $spacing-xs;
+      min-width: 0;
     }
 
     .detail__title-row {
@@ -188,6 +199,10 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
       font-weight: var(--font-weight-semibold);
       color: var(--color-text-primary);
       margin: 0;
+
+      @include mobile {
+        font-size: var(--text-lg);
+      }
     }
 
     .detail__type-label {
@@ -201,6 +216,10 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
       align-items: center;
       gap: $spacing-sm;
       flex-shrink: 0;
+
+      @include mobile {
+        flex-wrap: wrap;
+      }
     }
 
     .detail__action-btn {
@@ -293,6 +312,11 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
       display: flex;
       align-items: center;
       gap: $spacing-sm;
+
+      @include mobile {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
 
     .detail__config-url {

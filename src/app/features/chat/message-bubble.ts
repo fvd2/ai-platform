@@ -44,6 +44,10 @@ interface MessageSegment {
       border: 1px solid var(--color-border-light);
       word-break: break-word;
 
+      @include mobile {
+        max-width: 95%;
+      }
+
       &--user {
         margin-left: auto;
         background: var(--color-primary);
