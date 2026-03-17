@@ -1,5 +1,5 @@
 <div class="chat">
-  <div class="chat__sidebar">
+  <div class="chat__sidebar" [class.chat__sidebar--open]="sidebarOpen()">
     <app-conversation-list
       [conversations]="conversations()"
       [activeId]="activeId()"
@@ -8,6 +8,9 @@
       (remove)="onDeleteConversation($event)"
     />
   </div>
+  @if (sidebarOpen()) {
+    <div class="chat__overlay" (click)="sidebarOpen.set(false)"></div>
+  }
 
   <div class="chat__main">
     @if (activeConversation()) {
@@ -42,6 +45,13 @@
           <button class="chat__cancel-btn" (click)="onCancel()">Stop</button>
         }
         <div class="chat__input-row">
+          <button
+            class="chat__sidebar-toggle"
+            (click)="sidebarOpen.set(!sidebarOpen())"
+            aria-label="Toggle conversations"
+          >
+            ☰
+          </button>
           <textarea
             #textareaEl
             class="chat__input"
@@ -67,6 +77,9 @@
         <h2>AI Platform</h2>
         <p>Select a conversation or start a new one.</p>
         <button class="chat__empty-btn" (click)="onCreateConversation()">New Chat</button>
+        <button class="chat__sidebar-toggle chat__sidebar-toggle--empty" (click)="sidebarOpen.set(true)">
+          View Conversations
+        </button>
       </div>
     }
   </div>

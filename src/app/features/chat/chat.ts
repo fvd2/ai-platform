@@ -40,6 +40,7 @@ export class ChatComponent {
 
   protected readonly activeId = computed(() => this.activeConversation()?.id ?? null);
   protected readonly inputText = signal('');
+  protected readonly sidebarOpen = signal(false);
 
   constructor() {
     // Load conversations on init
@@ -69,6 +70,7 @@ export class ChatComponent {
   protected async onSelectConversation(id: string): Promise<void> {
     await this.chatService.selectConversation(id);
     await this.router.navigate(['/chat', id]);
+    this.sidebarOpen.set(false);
   }
 
   protected async onDeleteConversation(id: string): Promise<void> {

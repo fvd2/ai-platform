@@ -3,6 +3,7 @@
 .chat {
   display: flex;
   height: 100%;
+  position: relative;
 }
 
 .chat__sidebar {
@@ -12,6 +13,37 @@
   border-right: 1px solid var(--color-border-light);
   padding: $spacing-md;
   overflow-y: auto;
+
+  @include mobile-and-tablet {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: $mobile-bottom-nav-height;
+    z-index: 60;
+    width: 280px;
+    min-width: unset;
+    transform: translateX(-100%);
+    transition: transform $transition-slow;
+    box-shadow: none;
+
+    &--open {
+      transform: translateX(0);
+      box-shadow: $shadow-lg;
+    }
+  }
+}
+
+.chat__overlay {
+  display: none;
+
+  @include mobile-and-tablet {
+    display: block;
+    position: fixed;
+    inset: 0;
+    bottom: $mobile-bottom-nav-height;
+    background: rgb(0 0 0 / 0.3);
+    z-index: 55;
+  }
 }
 
 .chat__main {
@@ -28,6 +60,10 @@
   display: flex;
   flex-direction: column;
   gap: $spacing-md;
+
+  @include mobile {
+    padding: $spacing-md $spacing-sm;
+  }
 }
 
 .chat__streaming {
@@ -38,6 +74,10 @@
   border: 1px solid var(--color-border-light);
   white-space: pre-wrap;
   word-break: break-word;
+
+  @include mobile {
+    max-width: 95%;
+  }
 }
 
 .chat__streaming-role {
@@ -78,6 +118,10 @@
   background: var(--color-error-light);
   color: var(--color-error-text);
   font-size: var(--text-sm);
+
+  @include mobile {
+    padding: $spacing-sm $spacing-md;
+  }
 }
 
 .chat__error-dismiss {
@@ -98,6 +142,10 @@
   border-top: 1px solid var(--color-border);
   padding: $spacing-md $spacing-lg;
   background: var(--color-bg-primary);
+
+  @include mobile {
+    padding: $spacing-sm;
+  }
 }
 
 .chat__cancel-btn {
@@ -124,6 +172,39 @@
   align-items: flex-end;
 }
 
+.chat__sidebar-toggle {
+  display: none;
+
+  @include mobile-and-tablet {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: $radius-md;
+    font-size: var(--text-lg);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: background $transition-fast;
+
+    &:hover {
+      background: var(--color-bg-tertiary);
+    }
+
+    &--empty {
+      width: auto;
+      height: auto;
+      padding: $spacing-sm $spacing-lg;
+      font-size: var(--text-sm);
+      border-radius: $radius-md;
+      color: var(--color-text-secondary);
+    }
+  }
+}
+
 .chat__input {
   flex: 1;
   resize: none;
@@ -137,6 +218,10 @@
   color: var(--color-text-primary);
   outline: none;
   transition: border-color $transition-fast;
+
+  @include mobile {
+    font-size: 16px; // Prevent iOS zoom on focus
+  }
 
   &:focus {
     border-color: var(--color-border-focus);
@@ -158,6 +243,10 @@
   font-weight: var(--font-weight-semibold);
   transition: background $transition-fast;
 
+  @include mobile {
+    padding: $spacing-sm $spacing-md;
+  }
+
   &:hover:not(:disabled) {
     background: var(--color-primary-dark);
   }
@@ -176,6 +265,7 @@
   justify-content: center;
   gap: $spacing-md;
   color: var(--color-text-muted);
+  padding: $spacing-lg;
 
   h2 {
     font-size: var(--text-2xl);

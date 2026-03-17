@@ -59,6 +59,11 @@ import { SchedulePickerComponent } from '../../shared/schedule-picker';
       display: flex;
       flex-direction: column;
       gap: $spacing-lg;
+
+      @include mobile {
+        padding: $spacing-md;
+        gap: $spacing-md;
+      }
     }
 
     .form__title {
@@ -90,6 +95,10 @@ import { SchedulePickerComponent } from '../../shared/schedule-picker';
       background: var(--color-bg-primary);
       outline: none;
       transition: border-color $transition-fast;
+
+      @include mobile {
+        font-size: 16px;
+      }
 
       &:focus {
         border-color: var(--color-border-focus);

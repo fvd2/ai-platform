@@ -98,6 +98,10 @@ import { ArtifactService } from '../core/services/artifact.service';
     .shell {
       display: flex;
       min-height: 100dvh;
+
+      @include mobile-and-tablet {
+        flex-direction: column;
+      }
     }
 
     // ── Icon Rail ──
@@ -109,6 +113,21 @@ import { ArtifactService } from '../core/services/artifact.service';
       flex-direction: column;
       align-items: center;
       padding: $spacing-sm 0;
+
+      @include mobile-and-tablet {
+        width: 100%;
+        min-width: unset;
+        flex-direction: row;
+        order: 1;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        height: $mobile-bottom-nav-height;
+        padding: 0;
+        border-top: 1px solid rgb(255 255 255 / 0.1);
+      }
     }
 
     .shell__logo {
@@ -117,6 +136,10 @@ import { ArtifactService } from '../core/services/artifact.service';
       color: var(--color-text-inverse);
       padding: $spacing-sm 0 $spacing-lg;
       user-select: none;
+
+      @include mobile-and-tablet {
+        display: none;
+      }
     }
 
     .shell__nav {
@@ -125,6 +148,13 @@ import { ArtifactService } from '../core/services/artifact.service';
       align-items: center;
       gap: $spacing-xs;
       width: 100%;
+
+      @include mobile-and-tablet {
+        flex-direction: row;
+        justify-content: space-around;
+        gap: 0;
+        height: 100%;
+      }
     }
 
     .shell__nav-item {
@@ -158,12 +188,27 @@ import { ArtifactService } from '../core/services/artifact.service';
       &--bottom {
         margin-top: auto;
         margin-bottom: $spacing-sm;
+
+        @include mobile-and-tablet {
+          margin-top: 0;
+          margin-bottom: 0;
+        }
+      }
+
+      @include mobile-and-tablet {
+        width: 48px;
+        height: 48px;
+        border-radius: $radius-lg;
       }
     }
 
     .shell__nav-icon {
       font-size: 20px;
       line-height: 1;
+
+      @include mobile-and-tablet {
+        font-size: 22px;
+      }
     }
 
     // ── Main Content ──
@@ -173,6 +218,10 @@ import { ArtifactService } from '../core/services/artifact.service';
       display: flex;
       flex-direction: column;
       min-width: 0;
+
+      @include mobile-and-tablet {
+        padding-bottom: $mobile-bottom-nav-height;
+      }
     }
 
     // ── Artifact Panel ──
@@ -182,6 +231,17 @@ import { ArtifactService } from '../core/services/artifact.service';
       border-left: 1px solid var(--color-border);
       background: var(--color-bg-primary);
       animation: slide-in-right $transition-slow;
+
+      @include mobile-and-tablet {
+        position: fixed;
+        inset: 0;
+        bottom: $mobile-bottom-nav-height;
+        width: 100%;
+        min-width: unset;
+        z-index: 50;
+        border-left: none;
+        animation: slide-up $transition-slow;
+      }
     }
 
     @keyframes slide-in-right {
@@ -191,6 +251,17 @@ import { ArtifactService } from '../core/services/artifact.service';
       }
       to {
         transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slide-up {
+      from {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
         opacity: 1;
       }
     }
@@ -243,6 +314,11 @@ import { ArtifactService } from '../core/services/artifact.service';
         &:hover {
           background: var(--color-bg-secondary);
           color: var(--color-text-primary);
+        }
+
+        @include mobile-and-tablet {
+          width: 40px;
+          height: 40px;
         }
       }
     }

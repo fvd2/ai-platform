@@ -10,8 +10,14 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
     </div>
   `,
   styles: `
+    @use 'styles/variables' as *;
+
     .page {
       padding: 2rem;
+
+      @include mobile {
+        padding: 1rem;
+      }
     }
     .page__description {
       color: var(--color-text-muted);
