@@ -1,31 +1,43 @@
 // ──────────────────────────────────────────────
 // Design Tokens — AI Platform
-// Professional, clean design system
+// Modern, polished design system
 // ──────────────────────────────────────────────
 
 // ── Colors (palette) ──
-// Primary — slate blue (professional, trustworthy)
-$blue-50: #eff6ff;
-$blue-100: #dbeafe;
-$blue-200: #bfdbfe;
-$blue-300: #93c5fd;
-$blue-400: #60a5fa;
-$blue-500: #3b82f6;
-$blue-600: #2563eb;
-$blue-700: #1d4ed8;
-$blue-800: #1e40af;
-$blue-900: #1e3a8a;
+// Primary — indigo (modern, premium feel)
+$indigo-50: #eef2ff;
+$indigo-100: #e0e7ff;
+$indigo-200: #c7d2fe;
+$indigo-300: #a5b4fc;
+$indigo-400: #818cf8;
+$indigo-500: #6366f1;
+$indigo-600: #4f46e5;
+$indigo-700: #4338ca;
+$indigo-800: #3730a3;
+$indigo-900: #312e81;
+$indigo-950: #1e1b4b;
 
-// Success — green
-$green-50: #f0fdf4;
-$green-100: #dcfce7;
-$green-200: #bbf7d0;
-$green-300: #86efac;
-$green-400: #4ade80;
-$green-500: #22c55e;
-$green-600: #16a34a;
-$green-700: #15803d;
-$green-800: #166534;
+// Accent — violet
+$violet-50: #f5f3ff;
+$violet-100: #ede9fe;
+$violet-200: #ddd6fe;
+$violet-300: #c4b5fd;
+$violet-400: #a78bfa;
+$violet-500: #8b5cf6;
+$violet-600: #7c3aed;
+$violet-800: #5b21b6;
+$violet-900: #4c1d95;
+
+// Success — emerald
+$green-50: #ecfdf5;
+$green-100: #d1fae5;
+$green-200: #a7f3d0;
+$green-300: #6ee7b7;
+$green-400: #34d399;
+$green-500: #10b981;
+$green-600: #059669;
+$green-700: #047857;
+$green-800: #065f46;
 
 // Warning — amber
 $amber-50: #fffbeb;
@@ -38,18 +50,18 @@ $amber-600: #d97706;
 $amber-700: #b45309;
 $amber-800: #92400e;
 
-// Error — red
-$red-50: #fef2f2;
-$red-100: #fee2e2;
-$red-200: #fecaca;
-$red-300: #fca5a5;
-$red-400: #f87171;
-$red-500: #ef4444;
-$red-600: #dc2626;
-$red-700: #b91c1c;
-$red-800: #991b1b;
+// Error — rose
+$red-50: #fff1f2;
+$red-100: #ffe4e6;
+$red-200: #fecdd3;
+$red-300: #fda4af;
+$red-400: #fb7185;
+$red-500: #f43f5e;
+$red-600: #e11d48;
+$red-700: #be123c;
+$red-800: #9f1239;
 
-// Gray — neutral slate
+// Gray — slate (cool-toned)
 $gray-50: #f8fafc;
 $gray-100: #f1f5f9;
 $gray-200: #e2e8f0;
@@ -60,6 +72,7 @@ $gray-600: #475569;
 $gray-700: #334155;
 $gray-800: #1e293b;
 $gray-900: #0f172a;
+$gray-950: #020617;
 
 // ── Spacing ──
 $spacing-2xs: 0.125rem;
@@ -80,9 +93,11 @@ $radius-2xl: 1.5rem;
 $radius-full: 9999px;
 
 // ── Shadows ──
-$shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-$shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-$shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+$shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+$shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+$shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+$shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+$shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04);
 
 // ── Transitions ──
 $transition-fast: 150ms ease;
@@ -96,10 +111,10 @@ $bp-lg: 1024px;
 $bp-xl: 1280px;
 
 // ── Layout ──
-$nav-rail-width: 64px;
+$nav-rail-width: 68px;
 $sub-sidebar-width: 280px;
-$artifact-panel-width: 420px;
-$mobile-bottom-nav-height: 56px;
+$artifact-panel-width: 440px;
+$mobile-bottom-nav-height: 60px;
 
 // ── Responsive Mixins ──
 @mixin mobile {

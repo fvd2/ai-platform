@@ -3,11 +3,14 @@
 // ── CSS Custom Properties ──
 :root {
   // Colors
-  --color-primary: #{$blue-600};
-  --color-primary-light: #{$blue-100};
-  --color-primary-lighter: #{$blue-50};
-  --color-primary-dark: #{$blue-700};
+  --color-primary: #{$indigo-600};
+  --color-primary-light: #{$indigo-100};
+  --color-primary-lighter: #{$indigo-50};
+  --color-primary-dark: #{$indigo-700};
   --color-primary-text: #fff;
+
+  --color-accent: #{$violet-500};
+  --color-accent-light: #{$violet-100};
 
   --color-success: #{$green-600};
   --color-success-light: #{$green-50};
@@ -18,14 +21,15 @@
   --color-warning-text: #{$amber-800};
 
   --color-error: #{$red-500};
-  --color-error-light: #{$red-100};
-  --color-error-text: #{$red-800};
+  --color-error-light: #{$red-50};
+  --color-error-text: #{$red-700};
 
   // Backgrounds
   --color-bg-primary: #ffffff;
   --color-bg-secondary: #{$gray-50};
   --color-bg-tertiary: #{$gray-100};
   --color-bg-app: #{$gray-50};
+  --color-bg-elevated: #ffffff;
 
   // Text
   --color-text-primary: #{$gray-900};
@@ -36,21 +40,21 @@
   // Borders
   --color-border: #{$gray-200};
   --color-border-light: #{$gray-100};
-  --color-border-focus: #{$blue-500};
+  --color-border-focus: #{$indigo-500};
 
   // Font
-  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    sans-serif;
-  --font-family-mono: 'SF Mono', SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-    monospace;
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'SF Mono', SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', monospace;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
   --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
   --text-lg: 1.125rem;
   --text-xl: 1.25rem;
   --text-2xl: 1.5rem;
@@ -68,9 +72,11 @@
   --spacing-xl: #{$spacing-xl};
 
   // Shadows
+  --shadow-xs: #{$shadow-xs};
   --shadow-sm: #{$shadow-sm};
   --shadow-md: #{$shadow-md};
   --shadow-lg: #{$shadow-lg};
+  --shadow-xl: #{$shadow-xl};
 
   // Radius
   --radius-sm: #{$radius-sm};
@@ -80,45 +86,54 @@
 
   // Layout
   --sidebar-width: var(--nav-rail-width);
-  --nav-rail-width: 64px;
-  --sub-sidebar-width: 280px;
-  --artifact-panel-width: 420px;
+  --nav-rail-width: #{$nav-rail-width};
+  --sub-sidebar-width: #{$sub-sidebar-width};
+  --artifact-panel-width: #{$artifact-panel-width};
+
+  // Gradients
+  --gradient-primary: linear-gradient(135deg, #{$indigo-600} 0%, #{$violet-600} 100%);
+  --gradient-surface: linear-gradient(135deg, #{$indigo-50} 0%, #{$violet-50} 100%);
+  --gradient-nav: linear-gradient(180deg, #{$gray-900} 0%, #{$indigo-950} 100%);
 
   // Additional semantic colors
-  --color-bg-dark: #0f172a;
-  --color-purple: #7c3aed;
-  --color-purple-light: #f5f3ff;
+  --color-bg-dark: #{$gray-900};
+  --color-purple: #{$violet-600};
+  --color-purple-light: #{$violet-50};
 
   // Status colors
   --color-status-active: #{$green-500};
   --color-status-paused: #{$gray-400};
   --color-status-error: #{$red-500};
-  --color-status-running: #{$blue-500};
+  --color-status-running: #{$indigo-500};
 }
 
 // ── Dark Theme ──
 [data-theme='dark'] {
-  --color-primary: #{$blue-400};
-  --color-primary-light: #{$blue-900};
-  --color-primary-lighter: #{$blue-800};
-  --color-primary-dark: #{$blue-300};
+  --color-primary: #{$indigo-400};
+  --color-primary-light: #{$indigo-900};
+  --color-primary-lighter: #{$indigo-950};
+  --color-primary-dark: #{$indigo-300};
+
+  --color-accent: #{$violet-400};
+  --color-accent-light: #{$violet-900};
 
   --color-success: #{$green-400};
-  --color-success-light: #{$green-800};
+  --color-success-light: rgba($green-500, 0.1);
   --color-success-text: #{$green-300};
 
   --color-warning: #{$amber-400};
-  --color-warning-light: #{$amber-800};
+  --color-warning-light: rgba($amber-500, 0.1);
   --color-warning-text: #{$amber-300};
 
   --color-error: #{$red-400};
-  --color-error-light: #{$red-800};
+  --color-error-light: rgba($red-500, 0.1);
   --color-error-text: #{$red-300};
 
   --color-bg-primary: #{$gray-900};
   --color-bg-secondary: #{$gray-800};
   --color-bg-tertiary: #{$gray-700};
-  --color-bg-app: #0b1120;
+  --color-bg-app: #{$gray-950};
+  --color-bg-elevated: #{$gray-800};
 
   --color-text-primary: #{$gray-100};
   --color-text-secondary: #{$gray-300};
@@ -127,21 +142,30 @@
 
   --color-border: #{$gray-700};
   --color-border-light: #{$gray-800};
-  --color-border-focus: #{$blue-400};
+  --color-border-focus: #{$indigo-400};
 
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.3);
 
-  --color-bg-dark: #{$gray-900};
-  --color-purple: #a78bfa;
-  --color-purple-light: #1e1533;
+  --gradient-primary: linear-gradient(135deg, #{$indigo-500} 0%, #{$violet-500} 100%);
+  --gradient-surface: linear-gradient(135deg, rgba($indigo-500, 0.08) 0%, rgba($violet-500, 0.08) 100%);
+  --gradient-nav: linear-gradient(180deg, #{$gray-950} 0%, #{$indigo-950} 100%);
+
+  --color-bg-dark: #{$gray-950};
+  --color-purple: #{$violet-400};
+  --color-purple-light: rgba($violet-400, 0.1);
 
   --color-status-active: #{$green-400};
   --color-status-paused: #{$gray-500};
   --color-status-error: #{$red-400};
-  --color-status-running: #{$blue-400};
+  --color-status-running: #{$indigo-400};
 }
+
+// ── Web Fonts ──
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 // ── Reset & Base ──
 *,
@@ -197,6 +221,25 @@ img {
   border: 0;
 }
 
+// ── Scrollbar styling ──
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+
+  &:hover {
+    background: var(--color-text-muted);
+  }
+}
+
 // ── Reduced Motion ──
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -207,4 +250,10 @@ img {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+// ── Selection ──
+::selection {
+  background: var(--color-primary-light);
+  color: var(--color-text-primary);
 }

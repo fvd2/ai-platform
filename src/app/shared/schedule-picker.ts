@@ -43,13 +43,14 @@ import { ChangeDetectionStrategy, Component, computed, input, output, signal } f
       border: 1px solid var(--color-border);
       border-radius: $radius-full;
       font-size: var(--text-sm);
-      background: #fff;
+      background: var(--color-bg-primary);
       color: var(--color-text-secondary);
       cursor: pointer;
       transition: all $transition-fast;
 
       &:hover:not(.schedule-picker__preset--active) {
         background: var(--color-bg-secondary);
+        border-color: var(--color-text-muted);
       }
 
       &--active {
@@ -64,13 +65,15 @@ import { ChangeDetectionStrategy, Component, computed, input, output, signal } f
       width: 100%;
       padding: $spacing-sm $spacing-md;
       border: 1px solid var(--color-border);
-      border-radius: $radius-md;
+      border-radius: $radius-lg;
       font-family: var(--font-family-mono);
       font-size: var(--text-sm);
+      color: var(--color-text-primary);
+      background: var(--color-bg-primary);
 
       &:focus {
         border-color: var(--color-border-focus);
-        box-shadow: 0 0 0 3px var(--color-primary-light);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.08);
         outline: none;
       }
     }

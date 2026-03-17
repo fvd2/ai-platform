@@ -27,22 +27,25 @@ describe('RunHistoryItemComponent', () => {
     return fixture;
   }
 
-  it('should render success status indicator', () => {
+  it('should render success status indicator with SVG icon', () => {
     createComponent('success', '2026-03-16T10:00:00Z');
-    const status = fixture.nativeElement.querySelector('.run-item__status');
-    expect(status?.textContent?.trim()).toContain('✓');
+    const statusIcon = fixture.nativeElement.querySelector('.run-item__status-icon--success');
+    expect(statusIcon).toBeTruthy();
+    expect(statusIcon.querySelector('svg')).toBeTruthy();
   });
 
-  it('should render error status indicator', () => {
+  it('should render error status indicator with SVG icon', () => {
     createComponent('error', '2026-03-16T10:00:00Z');
-    const status = fixture.nativeElement.querySelector('.run-item__status');
-    expect(status?.textContent?.trim()).toContain('✗');
+    const statusIcon = fixture.nativeElement.querySelector('.run-item__status-icon--error');
+    expect(statusIcon).toBeTruthy();
+    expect(statusIcon.querySelector('svg')).toBeTruthy();
   });
 
-  it('should render running status indicator', () => {
+  it('should render running status indicator with SVG icon', () => {
     createComponent('running', '2026-03-16T10:00:00Z');
-    const status = fixture.nativeElement.querySelector('.run-item__status');
-    expect(status?.textContent?.trim()).toContain('◌');
+    const statusIcon = fixture.nativeElement.querySelector('.run-item__status-icon--running');
+    expect(statusIcon).toBeTruthy();
+    expect(statusIcon.querySelector('svg')).toBeTruthy();
   });
 
   it('should display formatted timestamp', () => {
@@ -108,17 +111,19 @@ describe('RunHistoryItemComponent', () => {
     expect(body).toBeNull();
   });
 
-  it('should show right-pointing chevron when collapsed', () => {
+  it('should render SVG chevron when collapsed', () => {
     createComponent('success', '2026-03-16T10:00:00Z');
     const chevron = fixture.nativeElement.querySelector('.run-item__chevron');
-    expect(chevron?.textContent?.trim()).toBe('▸');
+    expect(chevron).toBeTruthy();
+    expect(chevron.tagName.toLowerCase()).toBe('svg');
+    expect(chevron.classList.contains('run-item__chevron--open')).toBe(false);
   });
 
-  it('should show down-pointing chevron when expanded', () => {
+  it('should add open class to chevron when expanded', () => {
     createComponent('success', '2026-03-16T10:00:00Z');
     fixture.componentInstance.expanded.set(true);
     fixture.detectChanges();
     const chevron = fixture.nativeElement.querySelector('.run-item__chevron');
-    expect(chevron?.textContent?.trim()).toBe('▾');
+    expect(chevron.classList.contains('run-item__chevron--open')).toBe(true);
   });
 });
