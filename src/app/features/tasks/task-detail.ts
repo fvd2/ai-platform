@@ -32,6 +32,9 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
             (toggled)="toggle.emit()"
           />
           <button class="detail__action-btn detail__action-btn--run" (click)="runNow.emit()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
             Run Now
           </button>
           <button class="detail__action-btn detail__action-btn--delete" (click)="delete.emit()">
@@ -40,7 +43,7 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
         </div>
       </header>
 
-      <section class="detail__section">
+      <section class="detail__section detail__card">
         <div class="detail__section-header">
           <h3 class="detail__section-title">Prompt</h3>
           <button class="detail__edit-btn" (click)="editingPrompt.set(!editingPrompt())">
@@ -60,7 +63,7 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
         }
       </section>
 
-      <section class="detail__section">
+      <section class="detail__section detail__card">
         <div class="detail__section-header">
           <h3 class="detail__section-title">Schedule</h3>
           <button class="detail__edit-btn" (click)="editingSchedule.set(!editingSchedule())">
@@ -79,16 +82,25 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
             <span class="detail__schedule-desc">{{ task().scheduleDescription }}</span>
           </div>
         }
-        @if (task().nextRunAt) {
-          <p class="detail__next-run">
-            Next run: {{ task().nextRunAt | date: 'MMM d, y h:mm a' }}
-          </p>
-        }
-        @if (task().lastRunAt) {
-          <p class="detail__last-run">
-            Last run: {{ task().lastRunAt | date: 'MMM d, y h:mm a' }}
-          </p>
-        }
+        <div class="detail__schedule-times">
+          @if (task().nextRunAt) {
+            <p class="detail__time-info">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              Next: {{ task().nextRunAt | date: 'MMM d, y h:mm a' }}
+            </p>
+          }
+          @if (task().lastRunAt) {
+            <p class="detail__time-info">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Last: {{ task().lastRunAt | date: 'MMM d, y h:mm a' }}
+            </p>
+          }
+        </div>
       </section>
 
       <section class="detail__section">
@@ -113,10 +125,11 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
     @use 'styles/variables' as *;
 
     .detail {
-      padding: $spacing-lg;
+      padding: $spacing-lg $spacing-xl;
       display: flex;
       flex-direction: column;
       gap: $spacing-lg;
+      max-width: 800px;
 
       @include mobile {
         padding: $spacing-md;
@@ -147,9 +160,10 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
 
     .detail__title {
       font-size: var(--text-xl);
-      font-weight: var(--font-weight-semibold);
+      font-weight: var(--font-weight-bold);
       color: var(--color-text-primary);
       margin: 0;
+      letter-spacing: -0.01em;
 
       @include mobile {
         font-size: var(--text-lg);
@@ -173,9 +187,12 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
     }
 
     .detail__action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: $spacing-xs;
       padding: $spacing-xs $spacing-md;
       border: 1px solid var(--color-border);
-      border-radius: $radius-md;
+      border-radius: $radius-lg;
       font-size: var(--text-sm);
       font-weight: var(--font-weight-medium);
       cursor: pointer;
@@ -184,16 +201,18 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
       color: var(--color-text-secondary);
 
       &:hover {
-        background: var(--color-bg-secondary);
+        background: var(--color-bg-tertiary);
       }
 
       &--run {
-        background: var(--color-primary);
-        color: var(--color-primary-text);
-        border-color: var(--color-primary);
+        background: var(--gradient-primary);
+        color: #fff;
+        border-color: transparent;
+        box-shadow: $shadow-sm;
 
         &:hover {
-          background: var(--color-primary-dark);
+          box-shadow: $shadow-md;
+          transform: translateY(-1px);
         }
       }
 
@@ -201,8 +220,21 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
         &:hover {
           background: var(--color-error-light);
           color: var(--color-error-text);
-          border-color: var(--color-error);
+          border-color: rgba(244, 63, 94, 0.3);
         }
+      }
+    }
+
+    .detail__card {
+      background: var(--color-bg-primary);
+      border: 1px solid var(--color-border-light);
+      border-radius: $radius-xl;
+      padding: $spacing-lg;
+      box-shadow: $shadow-xs;
+
+      @include mobile {
+        padding: $spacing-md;
+        border-radius: $radius-lg;
       }
     }
 
@@ -231,8 +263,9 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
       font-size: var(--text-sm);
       color: var(--color-primary);
       cursor: pointer;
-      padding: $spacing-2xs $spacing-xs;
-      border-radius: $radius-sm;
+      padding: $spacing-2xs $spacing-sm;
+      border-radius: $radius-md;
+      font-weight: var(--font-weight-medium);
       transition: background $transition-fast;
 
       &:hover {
@@ -243,24 +276,25 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
     .detail__save-btn {
       align-self: flex-start;
       padding: $spacing-xs $spacing-md;
-      background: var(--color-primary);
-      color: var(--color-primary-text);
+      background: var(--gradient-primary);
+      color: #fff;
       border: none;
-      border-radius: $radius-md;
+      border-radius: $radius-lg;
       font-size: var(--text-sm);
       font-weight: var(--font-weight-medium);
       cursor: pointer;
-      transition: background $transition-fast;
+      transition: all $transition-fast;
+      box-shadow: $shadow-sm;
 
       &:hover {
-        background: var(--color-primary-dark);
+        box-shadow: $shadow-md;
       }
     }
 
     .detail__prompt-display {
       background: var(--color-bg-secondary);
       padding: $spacing-md;
-      border-radius: $radius-md;
+      border-radius: $radius-lg;
       font-size: var(--text-sm);
       line-height: var(--line-height-relaxed);
       white-space: pre-wrap;
@@ -280,8 +314,9 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
       font-size: var(--text-sm);
       background: var(--color-bg-secondary);
       padding: $spacing-2xs $spacing-sm;
-      border-radius: $radius-sm;
+      border-radius: $radius-md;
       color: var(--color-text-secondary);
+      border: 1px solid var(--color-border-light);
     }
 
     .detail__schedule-desc {
@@ -289,8 +324,17 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
       color: var(--color-text-muted);
     }
 
-    .detail__next-run,
-    .detail__last-run {
+    .detail__schedule-times {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-2xs;
+      margin-top: $spacing-xs;
+    }
+
+    .detail__time-info {
+      display: flex;
+      align-items: center;
+      gap: $spacing-xs;
       font-size: var(--text-xs);
       color: var(--color-text-muted);
       margin: 0;
@@ -298,8 +342,10 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
 
     .detail__runs {
       border: 1px solid var(--color-border-light);
-      border-radius: $radius-md;
+      border-radius: $radius-lg;
       overflow: hidden;
+      background: var(--color-bg-primary);
+      box-shadow: $shadow-xs;
     }
 
     .detail__runs-empty {

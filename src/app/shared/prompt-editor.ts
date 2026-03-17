@@ -5,7 +5,9 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="prompt-editor">
-      <label class="prompt-editor__label">{{ label() }}</label>
+      @if (label()) {
+        <label class="prompt-editor__label">{{ label() }}</label>
+      }
       <textarea
         class="prompt-editor__textarea"
         [rows]="rows()"
@@ -31,15 +33,20 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
       resize: vertical;
       padding: $spacing-sm $spacing-md;
       border: 1px solid var(--color-border);
-      border-radius: $radius-md;
+      border-radius: $radius-lg;
       font-family: var(--font-family);
       font-size: var(--text-sm);
       line-height: var(--line-height-relaxed);
       min-height: 120px;
+      color: var(--color-text-primary);
+      background: var(--color-bg-primary);
+      transition:
+        border-color $transition-fast,
+        box-shadow $transition-fast;
 
       &:focus {
         border-color: var(--color-border-focus);
-        box-shadow: 0 0 0 3px var(--color-primary-light);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.08);
         outline: none;
       }
 

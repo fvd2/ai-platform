@@ -8,16 +8,23 @@ import { DatePipe } from '@angular/common';
   template: `
     <div class="run-item" [class.run-item--expanded]="expanded()">
       <button class="run-item__header" (click)="expanded.set(!expanded())">
-        <span class="run-item__status">
+        <span class="run-item__status-icon" [class]="'run-item__status-icon--' + status()">
           @switch (status()) {
             @case ('success') {
-              \u2713
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
             }
             @case ('error') {
-              \u2717
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             }
             @case ('running') {
-              \u25CC
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+              </svg>
             }
           }
         </span>
@@ -25,7 +32,9 @@ import { DatePipe } from '@angular/common';
         @if (summary()) {
           <span class="run-item__summary">{{ summary() }}</span>
         }
-        <span class="run-item__chevron">{{ expanded() ? '\u25BE' : '\u25B8' }}</span>
+        <svg class="run-item__chevron" [class.run-item__chevron--open]="expanded()" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
       </button>
       @if (expanded()) {
         <div class="run-item__body">
@@ -44,6 +53,10 @@ import { DatePipe } from '@angular/common';
 
     .run-item {
       border-bottom: 1px solid var(--color-border-light);
+
+      &:last-child {
+        border-bottom: none;
+      }
     }
 
     .run-item__header {
@@ -63,23 +76,30 @@ import { DatePipe } from '@angular/common';
       }
     }
 
-    .run-item__status {
-      width: 20px;
-      text-align: center;
+    .run-item__status-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: $radius-full;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
-    }
 
-    :host(.run-item-host--success) .run-item__status {
-      color: var(--color-success);
-    }
+      &--success {
+        background: var(--color-success-light);
+        color: var(--color-success);
+      }
 
-    :host(.run-item-host--error) .run-item__status {
-      color: var(--color-error-text);
-    }
+      &--error {
+        background: var(--color-error-light);
+        color: var(--color-error);
+      }
 
-    :host(.run-item-host--running) .run-item__status {
-      color: var(--color-status-running);
-      animation: pulse 1.5s ease-in-out infinite;
+      &--running {
+        background: var(--color-primary-lighter);
+        color: var(--color-status-running);
+        animation: pulse 1.5s ease-in-out infinite;
+      }
     }
 
     @keyframes pulse {
@@ -108,21 +128,26 @@ import { DatePipe } from '@angular/common';
     }
 
     .run-item__chevron {
-      font-size: var(--text-xs);
       color: var(--color-text-muted);
       margin-left: auto;
+      flex-shrink: 0;
+      transition: transform $transition-fast;
+
+      &--open {
+        transform: rotate(180deg);
+      }
     }
 
     .run-item__body {
-      padding: $spacing-sm $spacing-md $spacing-md calc(20px + $spacing-md + $spacing-sm);
+      padding: $spacing-sm $spacing-md $spacing-md calc(24px + $spacing-md + $spacing-sm);
     }
 
     .run-item__error {
       font-size: var(--text-sm);
       color: var(--color-error-text);
       background: var(--color-error-light);
-      padding: $spacing-sm;
-      border-radius: $radius-sm;
+      padding: $spacing-sm $spacing-md;
+      border-radius: $radius-md;
       margin-bottom: $spacing-sm;
     }
 
@@ -131,10 +156,11 @@ import { DatePipe } from '@angular/common';
       font-family: var(--font-family-mono);
       white-space: pre-wrap;
       background: var(--color-bg-secondary);
-      padding: $spacing-sm;
-      border-radius: $radius-sm;
+      padding: $spacing-sm $spacing-md;
+      border-radius: $radius-md;
       max-height: 300px;
       overflow-y: auto;
+      border: 1px solid var(--color-border-light);
     }
   `,
   host: {

@@ -61,27 +61,27 @@ describe('ArtifactCardComponent', () => {
 
   it('should compute correct icon for code type', () => {
     createComponent('My Code', 'code', 'const x = 1;');
-    expect(fixture.componentInstance.typeIcon()).toBe('💻');
+    expect(fixture.componentInstance.typeIcon()).toBe('code');
   });
 
   it('should compute correct icon for markdown type', () => {
     createComponent('Doc', 'markdown', '# Hello');
-    expect(fixture.componentInstance.typeIcon()).toBe('📄');
+    expect(fixture.componentInstance.typeIcon()).toBe('file');
   });
 
   it('should compute correct icon for table type', () => {
     createComponent('Data', 'table', 'a,b');
-    expect(fixture.componentInstance.typeIcon()).toBe('📊');
+    expect(fixture.componentInstance.typeIcon()).toBe('table');
   });
 
   it('should compute correct icon for json type', () => {
     createComponent('Config', 'json', '{}');
-    expect(fixture.componentInstance.typeIcon()).toBe('🔧');
+    expect(fixture.componentInstance.typeIcon()).toBe('braces');
   });
 
   it('should compute correct icon for text type', () => {
     createComponent('Note', 'text', 'hello');
-    expect(fixture.componentInstance.typeIcon()).toBe('📝');
+    expect(fixture.componentInstance.typeIcon()).toBe('file');
   });
 
   it('should call ArtifactService.open when clicked', () => {

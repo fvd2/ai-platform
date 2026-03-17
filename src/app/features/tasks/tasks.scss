@@ -11,7 +11,6 @@
   min-width: $sub-sidebar-width;
   background: var(--color-bg-primary);
   border-right: 1px solid var(--color-border-light);
-  padding: $spacing-md;
   overflow-y: auto;
 
   @include mobile-and-tablet {
@@ -20,7 +19,7 @@
     left: 0;
     bottom: $mobile-bottom-nav-height;
     z-index: 60;
-    width: 280px;
+    width: 300px;
     min-width: unset;
     transform: translateX(-100%);
     transition: transform $transition-slow;
@@ -28,7 +27,7 @@
 
     &--open {
       transform: translateX(0);
-      box-shadow: $shadow-lg;
+      box-shadow: $shadow-xl;
     }
   }
 }
@@ -41,8 +40,9 @@
     position: fixed;
     inset: 0;
     bottom: $mobile-bottom-nav-height;
-    background: rgb(0 0 0 / 0.3);
+    background: rgb(0 0 0 / 0.4);
     z-index: 55;
+    backdrop-filter: blur(2px);
   }
 }
 
@@ -68,10 +68,15 @@
   height: 36px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: $radius-md;
-  font-size: var(--text-lg);
+  border-radius: $radius-lg;
   color: var(--color-text-secondary);
   cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+  }
 }
 
 .tasks__mobile-title {
@@ -86,6 +91,7 @@
   flex-direction: column;
   min-width: 0;
   overflow-y: auto;
+  background: var(--color-bg-secondary);
 }
 
 .tasks__empty {
@@ -99,12 +105,15 @@
 .tasks__error {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: $spacing-sm;
   padding: $spacing-sm $spacing-lg;
   background: var(--color-error-light);
   color: var(--color-error-text);
   font-size: var(--text-sm);
+
+  span {
+    flex: 1;
+  }
 
   @include mobile {
     padding: $spacing-sm $spacing-md;
@@ -112,12 +121,14 @@
 }
 
 .tasks__error-dismiss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   color: var(--color-error-text);
-  font-size: var(--text-lg);
-  line-height: 1;
-  padding: 0 $spacing-xs;
+  padding: $spacing-xs;
+  border-radius: $radius-sm;
   opacity: 0.7;
   cursor: pointer;
 
@@ -127,17 +138,22 @@
 }
 
 .tasks__empty-btn {
-  padding: $spacing-sm $spacing-xl;
-  background: var(--color-primary);
-  color: var(--color-primary-text);
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: 10px $spacing-xl;
+  background: var(--gradient-primary);
+  color: #fff;
   border: none;
-  border-radius: $radius-md;
+  border-radius: $radius-xl;
   font-size: var(--text-sm);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: background $transition-fast;
+  transition: all $transition-fast;
+  box-shadow: $shadow-sm;
 
   &:hover {
-    background: var(--color-primary-dark);
+    box-shadow: $shadow-md;
+    transform: translateY(-1px);
   }
 }

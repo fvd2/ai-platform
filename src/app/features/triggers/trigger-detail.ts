@@ -27,7 +27,7 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
       <header class="detail__header">
         <div class="detail__header-info">
           <div class="detail__title-row">
-            <span class="detail__type-icon">{{ typeIcon(trigger().type) }}</span>
+            <span class="detail__type-badge" [innerHTML]="typeIconSvg(trigger().type)"></span>
             <h2 class="detail__title">{{ trigger().name }}</h2>
           </div>
           <span class="detail__type-label">{{ typeLabel(trigger().type) }} trigger</span>
@@ -39,6 +39,9 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
             (toggled)="toggle.emit()"
           />
           <button class="detail__action-btn detail__action-btn--fire" (click)="fireNow.emit()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg>
             Fire Now
           </button>
           <button class="detail__action-btn detail__action-btn--delete" (click)="delete.emit()">
@@ -47,11 +50,11 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
         </div>
       </header>
 
-      <section class="detail__section">
+      <section class="detail__section detail__card">
         <h3 class="detail__section-title">Configuration</h3>
         @switch (trigger().type) {
           @case ('webhook') {
-            <div class="detail__config">
+            <div class="detail__config-fields">
               <div class="detail__config-field">
                 <label class="detail__config-label">Webhook URL</label>
                 <div class="detail__config-url-row">
@@ -60,6 +63,10 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
                     class="detail__copy-btn"
                     (click)="copyToClipboard(webhookUrl())"
                   >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
                     {{ copied() ? 'Copied!' : 'Copy' }}
                   </button>
                 </div>
@@ -73,7 +80,7 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
             </div>
           }
           @case ('poll') {
-            <div class="detail__config">
+            <div class="detail__config-fields">
               <div class="detail__config-field">
                 <label class="detail__config-label">Poll URL</label>
                 <code class="detail__config-url">{{ pollUrl() }}</code>
@@ -89,16 +96,14 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
             </div>
           }
           @case ('manual') {
-            <div class="detail__config">
-              <p class="detail__config-info">
-                This trigger fires manually. Use the "Fire Now" button to execute it.
-              </p>
-            </div>
+            <p class="detail__config-info">
+              This trigger fires manually. Use the "Fire Now" button to execute it.
+            </p>
           }
         }
       </section>
 
-      <section class="detail__section">
+      <section class="detail__section detail__card">
         <div class="detail__section-header">
           <h3 class="detail__section-title">Prompt</h3>
           <button class="detail__edit-btn" (click)="editingPrompt.set(!editingPrompt())">
@@ -152,10 +157,11 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
     @use 'styles/variables' as *;
 
     .detail {
-      padding: $spacing-lg;
+      padding: $spacing-lg $spacing-xl;
       display: flex;
       flex-direction: column;
       gap: $spacing-lg;
+      max-width: 800px;
 
       @include mobile {
         padding: $spacing-md;
@@ -190,15 +196,24 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
       gap: $spacing-sm;
     }
 
-    .detail__type-icon {
-      font-size: var(--text-xl);
+    .detail__type-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: $radius-lg;
+      background: var(--gradient-surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-primary);
+      flex-shrink: 0;
     }
 
     .detail__title {
       font-size: var(--text-xl);
-      font-weight: var(--font-weight-semibold);
+      font-weight: var(--font-weight-bold);
       color: var(--color-text-primary);
       margin: 0;
+      letter-spacing: -0.01em;
 
       @include mobile {
         font-size: var(--text-lg);
@@ -223,9 +238,12 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
     }
 
     .detail__action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: $spacing-xs;
       padding: $spacing-xs $spacing-md;
       border: 1px solid var(--color-border);
-      border-radius: $radius-md;
+      border-radius: $radius-lg;
       font-size: var(--text-sm);
       font-weight: var(--font-weight-medium);
       cursor: pointer;
@@ -234,16 +252,18 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
       color: var(--color-text-secondary);
 
       &:hover {
-        background: var(--color-bg-secondary);
+        background: var(--color-bg-tertiary);
       }
 
       &--fire {
-        background: var(--color-primary);
-        color: var(--color-primary-text);
-        border-color: var(--color-primary);
+        background: var(--gradient-primary);
+        color: #fff;
+        border-color: transparent;
+        box-shadow: $shadow-sm;
 
         &:hover {
-          background: var(--color-primary-dark);
+          box-shadow: $shadow-md;
+          transform: translateY(-1px);
         }
       }
 
@@ -251,8 +271,21 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
         &:hover {
           background: var(--color-error-light);
           color: var(--color-error-text);
-          border-color: var(--color-error);
+          border-color: rgba(244, 63, 94, 0.3);
         }
+      }
+    }
+
+    .detail__card {
+      background: var(--color-bg-primary);
+      border: 1px solid var(--color-border-light);
+      border-radius: $radius-xl;
+      padding: $spacing-lg;
+      box-shadow: $shadow-xs;
+
+      @include mobile {
+        padding: $spacing-md;
+        border-radius: $radius-lg;
       }
     }
 
@@ -284,14 +317,10 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
       color: var(--color-text-muted);
     }
 
-    .detail__config {
+    .detail__config-fields {
       display: flex;
       flex-direction: column;
       gap: $spacing-md;
-      padding: $spacing-md;
-      background: var(--color-bg-secondary);
-      border-radius: $radius-md;
-      border: 1px solid var(--color-border-light);
     }
 
     .detail__config-field {
@@ -324,14 +353,22 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
       font-size: var(--text-sm);
       color: var(--color-text-primary);
       word-break: break-all;
+      background: var(--color-bg-secondary);
+      padding: $spacing-2xs $spacing-sm;
+      border-radius: $radius-md;
+      border: 1px solid var(--color-border-light);
     }
 
     .detail__copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: $spacing-xs;
       padding: $spacing-2xs $spacing-sm;
       background: var(--color-bg-primary);
       border: 1px solid var(--color-border);
-      border-radius: $radius-sm;
+      border-radius: $radius-md;
       font-size: var(--text-xs);
+      font-weight: var(--font-weight-medium);
       color: var(--color-text-secondary);
       cursor: pointer;
       transition: all $transition-fast;
@@ -340,6 +377,7 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
       &:hover {
         background: var(--color-primary-lighter);
         color: var(--color-primary);
+        border-color: var(--color-primary-light);
       }
     }
 
@@ -360,8 +398,9 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
       font-size: var(--text-sm);
       color: var(--color-primary);
       cursor: pointer;
-      padding: $spacing-2xs $spacing-xs;
-      border-radius: $radius-sm;
+      padding: $spacing-2xs $spacing-sm;
+      border-radius: $radius-md;
+      font-weight: var(--font-weight-medium);
       transition: background $transition-fast;
 
       &:hover {
@@ -372,24 +411,25 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
     .detail__save-btn {
       align-self: flex-start;
       padding: $spacing-xs $spacing-md;
-      background: var(--color-primary);
-      color: var(--color-primary-text);
+      background: var(--gradient-primary);
+      color: #fff;
       border: none;
-      border-radius: $radius-md;
+      border-radius: $radius-lg;
       font-size: var(--text-sm);
       font-weight: var(--font-weight-medium);
       cursor: pointer;
-      transition: background $transition-fast;
+      transition: all $transition-fast;
+      box-shadow: $shadow-sm;
 
       &:hover {
-        background: var(--color-primary-dark);
+        box-shadow: $shadow-md;
       }
     }
 
     .detail__prompt-display {
       background: var(--color-bg-secondary);
       padding: $spacing-md;
-      border-radius: $radius-md;
+      border-radius: $radius-lg;
       font-size: var(--text-sm);
       line-height: var(--line-height-relaxed);
       white-space: pre-wrap;
@@ -406,8 +446,10 @@ import { RunHistoryItemComponent } from '../../shared/run-history-item';
 
     .detail__runs {
       border: 1px solid var(--color-border-light);
-      border-radius: $radius-md;
+      border-radius: $radius-lg;
       overflow: hidden;
+      background: var(--color-bg-primary);
+      box-shadow: $shadow-xs;
     }
 
     .detail__runs-empty {
@@ -463,14 +505,14 @@ export class TriggerDetailComponent {
     return config.condition ?? '';
   }
 
-  protected typeIcon(type: TriggerType): string {
+  protected typeIconSvg(type: TriggerType): string {
     switch (type) {
       case 'webhook':
-        return '\uD83D\uDD17';
+        return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
       case 'poll':
-        return '\uD83D\uDD04';
+        return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>';
       case 'manual':
-        return '\uD83D\uDC46';
+        return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>';
     }
   }
 

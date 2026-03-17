@@ -15,52 +15,102 @@ interface MessageSegment {
   imports: [ArtifactCardComponent],
   template: `
     <div class="bubble" [class.bubble--user]="message().role === 'user'">
-      <div class="bubble__role">{{ message().role === 'user' ? 'You' : 'AI' }}</div>
-      <div class="bubble__content">
-        @for (segment of segments(); track $index) {
-          @if (segment.type === 'text') {
-            <span class="bubble__text">{{ segment.content }}</span>
-          } @else {
-            <app-artifact-card
-              [title]="segment.title || 'Code'"
-              [type]="'code'"
-              [language]="segment.language || ''"
-              [preview]="segment.content.slice(0, 120)"
-              [content]="segment.content"
-            />
+      @if (message().role !== 'user') {
+        <div class="bubble__avatar bubble__avatar--ai">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+          </svg>
+        </div>
+      }
+      <div class="bubble__body" [class.bubble__body--user]="message().role === 'user'">
+        <div class="bubble__content">
+          @for (segment of segments(); track $index) {
+            @if (segment.type === 'text') {
+              <span class="bubble__text">{{ segment.content }}</span>
+            } @else {
+              <app-artifact-card
+                [title]="segment.title || 'Code'"
+                [type]="'code'"
+                [language]="segment.language || ''"
+                [preview]="segment.content.slice(0, 120)"
+                [content]="segment.content"
+              />
+            }
           }
-        }
+        </div>
       </div>
+      @if (message().role === 'user') {
+        <div class="bubble__avatar bubble__avatar--user">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        </div>
+      }
     </div>
   `,
   styles: `
     @use 'styles/variables' as *;
 
     .bubble {
-      max-width: 80%;
-      padding: $spacing-sm $spacing-md;
-      border-radius: $radius-lg;
-      background: var(--color-bg-primary);
-      border: 1px solid var(--color-border-light);
-      word-break: break-word;
+      display: flex;
+      gap: $spacing-sm;
+      max-width: 720px;
 
       @include mobile {
-        max-width: 95%;
+        max-width: 100%;
       }
 
       &--user {
         margin-left: auto;
-        background: var(--color-primary);
-        color: var(--color-primary-text);
-        border-color: transparent;
+        flex-direction: row;
+        justify-content: flex-end;
       }
     }
 
-    .bubble__role {
-      font-size: var(--text-xs);
-      font-weight: var(--font-weight-semibold);
-      margin-bottom: $spacing-2xs;
-      opacity: 0.7;
+    .bubble__avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: $radius-full;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+
+      &--ai {
+        background: var(--gradient-primary);
+        color: #fff;
+      }
+
+      &--user {
+        background: var(--color-bg-tertiary);
+        color: var(--color-text-secondary);
+        border: 1px solid var(--color-border);
+      }
+    }
+
+    .bubble__body {
+      flex: 1;
+      min-width: 0;
+      padding: $spacing-sm $spacing-md;
+      border-radius: $radius-lg;
+      background: var(--color-bg-primary);
+      border: 1px solid var(--color-border-light);
+      box-shadow: $shadow-xs;
+
+      &--user {
+        background: var(--color-primary);
+        color: var(--color-primary-text);
+        border-color: transparent;
+        box-shadow: $shadow-sm;
+        flex: 0 1 auto;
+        max-width: 75%;
+
+        @include mobile {
+          max-width: 85%;
+        }
+      }
     }
 
     .bubble__content {
@@ -73,6 +123,7 @@ interface MessageSegment {
 
     .bubble__text {
       white-space: pre-wrap;
+      word-break: break-word;
     }
   `,
 })

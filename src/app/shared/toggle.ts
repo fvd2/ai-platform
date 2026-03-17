@@ -35,22 +35,23 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 
     .toggle__track {
       position: relative;
-      width: 40px;
-      height: 22px;
+      width: 42px;
+      height: 24px;
       border-radius: $radius-full;
-      background: #{$gray-300};
+      background: var(--color-border);
       transition: background $transition-base;
     }
 
     .toggle__thumb {
       position: absolute;
-      top: 2px;
-      left: 2px;
+      top: 3px;
+      left: 3px;
       width: 18px;
       height: 18px;
       border-radius: $radius-full;
       background: #fff;
       transition: transform $transition-base;
+      box-shadow: $shadow-sm;
     }
 
     .toggle--checked {

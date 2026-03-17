@@ -8,7 +8,15 @@ import { Trigger, TriggerType } from '../../core/models/trigger.model';
   imports: [DatePipe],
   template: `
     <div class="list">
-      <button class="list__new-btn" (click)="create.emit()">+ New Trigger</button>
+      <div class="list__header">
+        <span class="list__title">Triggers</span>
+        <button class="list__new-btn" (click)="create.emit()" title="New trigger">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+      </div>
 
       <div class="list__items">
         @if (activeTriggers().length) {
@@ -28,7 +36,7 @@ import { Trigger, TriggerType } from '../../core/models/trigger.model';
               >
                 <div class="list__item-content">
                   <div class="list__item-name-row">
-                    <span class="list__item-type-icon">{{ typeIcon(trigger.type) }}</span>
+                    <span class="list__item-type-icon" [innerHTML]="typeIconSvg(trigger.type)"></span>
                     <span class="list__item-title">{{ trigger.name }}</span>
                   </div>
                   <span class="list__item-meta">
@@ -43,7 +51,10 @@ import { Trigger, TriggerType } from '../../core/models/trigger.model';
                   aria-label="Delete trigger"
                   (click)="$event.stopPropagation(); remove.emit(trigger.id)"
                 >
-                  &times;
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                 </button>
               </div>
             }
@@ -67,7 +78,7 @@ import { Trigger, TriggerType } from '../../core/models/trigger.model';
               >
                 <div class="list__item-content">
                   <div class="list__item-name-row">
-                    <span class="list__item-type-icon">{{ typeIcon(trigger.type) }}</span>
+                    <span class="list__item-type-icon" [innerHTML]="typeIconSvg(trigger.type)"></span>
                     <span class="list__item-title list__item-title--paused">{{ trigger.name }}</span>
                   </div>
                   <span class="list__item-meta">{{ trigger.runCount }} runs</span>
@@ -77,7 +88,10 @@ import { Trigger, TriggerType } from '../../core/models/trigger.model';
                   aria-label="Delete trigger"
                   (click)="$event.stopPropagation(); remove.emit(trigger.id)"
                 >
-                  &times;
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                 </button>
               </div>
             }
@@ -96,24 +110,42 @@ import { Trigger, TriggerType } from '../../core/models/trigger.model';
     .list {
       display: flex;
       flex-direction: column;
-      gap: $spacing-sm;
       height: 100%;
     }
 
-    .list__new-btn {
-      width: 100%;
-      padding: $spacing-sm $spacing-md;
-      background: var(--color-primary);
-      color: var(--color-primary-text);
-      border: none;
-      border-radius: $radius-md;
-      font-size: var(--text-sm);
+    .list__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: $spacing-md $spacing-md $spacing-sm;
+      flex-shrink: 0;
+    }
+
+    .list__title {
+      font-size: var(--text-xs);
       font-weight: var(--font-weight-semibold);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .list__new-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: var(--gradient-primary);
+      color: #fff;
+      border: none;
+      border-radius: $radius-lg;
       cursor: pointer;
-      transition: background $transition-fast;
+      transition: all $transition-fast;
+      box-shadow: $shadow-sm;
 
       &:hover {
-        background: var(--color-primary-dark);
+        box-shadow: $shadow-md;
+        transform: translateY(-1px);
       }
     }
 
@@ -123,6 +155,7 @@ import { Trigger, TriggerType } from '../../core/models/trigger.model';
       display: flex;
       flex-direction: column;
       gap: $spacing-xs;
+      padding: 0 $spacing-sm;
     }
 
     .list__group {
@@ -144,8 +177,8 @@ import { Trigger, TriggerType } from '../../core/models/trigger.model';
     }
 
     .list__group-dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: $radius-full;
 
       &--active {
@@ -162,9 +195,9 @@ import { Trigger, TriggerType } from '../../core/models/trigger.model';
       align-items: center;
       justify-content: space-between;
       padding: $spacing-sm $spacing-md;
-      border-radius: $radius-md;
+      border-radius: $radius-lg;
       cursor: pointer;
-      transition: background $transition-fast;
+      transition: all $transition-fast;
 
       &:hover {
         background: var(--color-bg-secondary);
@@ -192,8 +225,10 @@ import { Trigger, TriggerType } from '../../core/models/trigger.model';
     }
 
     .list__item-type-icon {
-      font-size: var(--text-sm);
+      display: flex;
+      align-items: center;
       flex-shrink: 0;
+      color: var(--color-text-muted);
     }
 
     .list__item-title {
@@ -213,14 +248,16 @@ import { Trigger, TriggerType } from '../../core/models/trigger.model';
     }
 
     .list__item-delete {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: none;
       border: none;
       color: var(--color-text-muted);
-      font-size: var(--text-lg);
-      padding: 0 $spacing-xs;
-      line-height: 1;
+      padding: $spacing-2xs;
+      border-radius: $radius-sm;
       opacity: 0;
-      transition: opacity $transition-fast, color $transition-fast;
+      transition: all $transition-fast;
       flex-shrink: 0;
 
       .list__item:hover &,
@@ -230,6 +267,7 @@ import { Trigger, TriggerType } from '../../core/models/trigger.model';
 
       &:hover {
         color: var(--color-error);
+        background: var(--color-error-light);
       }
 
       @media (hover: none) {
@@ -241,7 +279,7 @@ import { Trigger, TriggerType } from '../../core/models/trigger.model';
       font-size: var(--text-sm);
       color: var(--color-text-muted);
       text-align: center;
-      padding: $spacing-lg;
+      padding: $spacing-xl $spacing-lg;
     }
   `,
 })
@@ -260,14 +298,14 @@ export class TriggerListComponent {
     () => this.triggers().filter((t) => t.status === 'paused'),
   );
 
-  protected typeIcon(type: TriggerType): string {
+  protected typeIconSvg(type: TriggerType): string {
     switch (type) {
       case 'webhook':
-        return '\uD83D\uDD17';
+        return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
       case 'poll':
-        return '\uD83D\uDD04';
+        return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>';
       case 'manual':
-        return '\uD83D\uDC46';
+        return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>';
     }
   }
 }
