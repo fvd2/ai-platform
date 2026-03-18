@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import { randomUUID } from 'crypto';
 import { getDb } from '../db/index.js';
+import { executeTask, rescheduleTask, unscheduleTask } from '../services/scheduler.service.js';
 
 export const taskRoutes: FastifyPluginAsync = async (fastify) => {
   // List all tasks
@@ -35,6 +36,10 @@ export const taskRoutes: FastifyPluginAsync = async (fastify) => {
          FROM tasks WHERE id = ?`,
       )
       .get(id);
+
+    // Schedule the newly created task
+    rescheduleTask(id);
+
     reply.status(201).send(task);
   });
 
@@ -101,6 +106,12 @@ export const taskRoutes: FastifyPluginAsync = async (fastify) => {
       values.push(request.params.id);
       db.prepare(`UPDATE tasks SET ${sets.join(', ')} WHERE id = ?`).run(...values);
     }
+
+    // Reschedule if schedule or status changed
+    if (schedule !== undefined || status !== undefined) {
+      rescheduleTask(request.params.id);
+    }
+
     return db
       .prepare(
         `SELECT id, name, prompt, schedule, schedule_description as scheduleDescription,
@@ -114,6 +125,7 @@ export const taskRoutes: FastifyPluginAsync = async (fastify) => {
   // Delete task
   fastify.delete<{ Params: { id: string } }>('/:id', async (request, reply) => {
     const db = getDb();
+    unscheduleTask(request.params.id);
     db.prepare('DELETE FROM tasks WHERE id = ?').run(request.params.id);
     reply.status(204).send();
   });
@@ -133,6 +145,10 @@ export const taskRoutes: FastifyPluginAsync = async (fastify) => {
       newStatus,
       request.params.id,
     );
+
+    // Add/remove from scheduler based on new status
+    rescheduleTask(request.params.id);
+
     return db
       .prepare(
         `SELECT id, name, prompt, schedule, schedule_description as scheduleDescription,
@@ -163,14 +179,9 @@ export const taskRoutes: FastifyPluginAsync = async (fastify) => {
       reply.status(404).send({ error: 'Task not found' });
       return;
     }
-    const runId = randomUUID();
-    db.prepare(
-      `INSERT INTO task_runs (id, task_id, status, output, completed_at)
-       VALUES (?, ?, 'success', ?, datetime('now'))`,
-    ).run(runId, request.params.id, 'Task executed successfully (placeholder)');
-    db.prepare("UPDATE tasks SET last_run_at = datetime('now'), updated_at = datetime('now') WHERE id = ?").run(
-      request.params.id,
-    );
+
+    const runId = await executeTask(request.params.id);
+
     const run = db
       .prepare(
         `SELECT id, task_id as taskId, status, output, error,

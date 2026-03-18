@@ -10,6 +10,11 @@ import { chatRoutes } from './routes/chat.routes.js';
 import { taskRoutes } from './routes/task.routes.js';
 import { triggerRoutes } from './routes/trigger.routes.js';
 import { artifactRoutes } from './routes/artifact.routes.js';
+import { traceRoutes } from './routes/trace.routes.js';
+import { analyticsRoutes } from './routes/analytics.routes.js';
+import { graphRoutes } from './routes/graph.routes.js';
+import { initScheduler, stopScheduler } from './services/scheduler.service.js';
+import { initPollTriggers, stopAllPolling } from './services/trigger-executor.service.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -26,6 +31,9 @@ await app.register(chatRoutes, { prefix: '/api/chat' });
 await app.register(taskRoutes, { prefix: '/api/tasks' });
 await app.register(triggerRoutes, { prefix: '/api/triggers' });
 await app.register(artifactRoutes, { prefix: '/api/artifacts' });
+await app.register(traceRoutes, { prefix: '/api/traces' });
+await app.register(analyticsRoutes, { prefix: '/api/analytics' });
+await app.register(graphRoutes, { prefix: '/api/graph' });
 
 // Health check
 app.get('/api/health', async () => ({ status: 'ok' }));
@@ -44,6 +52,22 @@ if (existsSync(publicDir)) {
     return reply.sendFile('index.html');
   });
 }
+
+// Initialize scheduler and poll triggers after DB and routes are ready
+initScheduler();
+initPollTriggers();
+
+// Graceful shutdown
+const shutdown = async () => {
+  console.log('Shutting down gracefully...');
+  stopScheduler();
+  stopAllPolling();
+  await app.close();
+  process.exit(0);
+};
+
+process.on('SIGINT', () => void shutdown());
+process.on('SIGTERM', () => void shutdown());
 
 const port = parseInt(process.env['PORT'] ?? '3001', 10);
 await app.listen({ port, host: '0.0.0.0' });

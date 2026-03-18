@@ -1,6 +1,12 @@
 import { FastifyPluginAsync } from 'fastify';
 import { randomUUID } from 'crypto';
 import { getDb } from '../db/index.js';
+import {
+  executeTrigger,
+  processWebhook,
+  restartPolling,
+  stopPolling,
+} from '../services/trigger-executor.service.js';
 
 interface TriggerRow {
   id: string;
@@ -45,6 +51,12 @@ export const triggerRoutes: FastifyPluginAsync = async (fastify) => {
     const row = db
       .prepare(`${TRIGGER_SELECT} WHERE id = ?`)
       .get(id) as TriggerRow;
+
+    // Start polling if it's a poll trigger
+    if (type === 'poll') {
+      restartPolling(id);
+    }
+
     reply.status(201).send(parseTriggerConfig(row));
   });
 
@@ -106,6 +118,12 @@ export const triggerRoutes: FastifyPluginAsync = async (fastify) => {
       values.push(request.params.id);
       db.prepare(`UPDATE triggers SET ${sets.join(', ')} WHERE id = ?`).run(...values);
     }
+
+    // Restart polling if config, type, or status changed
+    if (config !== undefined || type !== undefined || status !== undefined) {
+      restartPolling(request.params.id);
+    }
+
     const row = db
       .prepare(`${TRIGGER_SELECT} WHERE id = ?`)
       .get(request.params.id) as TriggerRow;
@@ -115,6 +133,7 @@ export const triggerRoutes: FastifyPluginAsync = async (fastify) => {
   // Delete trigger
   fastify.delete<{ Params: { id: string } }>('/:id', async (request, reply) => {
     const db = getDb();
+    stopPolling(request.params.id);
     db.prepare('DELETE FROM triggers WHERE id = ?').run(request.params.id);
     reply.status(204).send();
   });
@@ -134,6 +153,10 @@ export const triggerRoutes: FastifyPluginAsync = async (fastify) => {
       newStatus,
       request.params.id,
     );
+
+    // Start/stop polling based on new status
+    restartPolling(request.params.id);
+
     const row = db
       .prepare(`${TRIGGER_SELECT} WHERE id = ?`)
       .get(request.params.id) as TriggerRow;
@@ -160,15 +183,9 @@ export const triggerRoutes: FastifyPluginAsync = async (fastify) => {
       reply.status(404).send({ error: 'Trigger not found' });
       return;
     }
-    const runId = randomUUID();
-    db.prepare(
-      `INSERT INTO trigger_runs (id, trigger_id, status, event_summary, output, completed_at)
-       VALUES (?, ?, 'success', 'Manual fire', 'Trigger fired successfully (placeholder)', datetime('now'))`,
-    ).run(runId, request.params.id);
-    db.prepare(
-      `UPDATE triggers SET run_count = run_count + 1, last_fired_at = datetime('now'),
-              updated_at = datetime('now') WHERE id = ?`,
-    ).run(request.params.id);
+
+    const runId = await executeTrigger(request.params.id, 'Manual fire');
+
     const run = db
       .prepare(
         `SELECT id, trigger_id as triggerId, status, event_summary as eventSummary,
@@ -193,15 +210,15 @@ export const triggerRoutes: FastifyPluginAsync = async (fastify) => {
       reply.status(400).send({ error: 'Trigger is not active' });
       return;
     }
-    const runId = randomUUID();
-    db.prepare(
-      `INSERT INTO trigger_runs (id, trigger_id, status, event_summary, output, completed_at)
-       VALUES (?, ?, 'success', 'Webhook received', 'Webhook processed successfully (placeholder)', datetime('now'))`,
-    ).run(runId, request.params.id);
-    db.prepare(
-      `UPDATE triggers SET run_count = run_count + 1, last_fired_at = datetime('now'),
-              updated_at = datetime('now') WHERE id = ?`,
-    ).run(request.params.id);
+
+    const runId = await processWebhook(request.params.id, request.body);
+
+    if (!runId) {
+      // Filter did not match
+      reply.status(200).send({ message: 'Webhook received but filter did not match' });
+      return;
+    }
+
     const run = db
       .prepare(
         `SELECT id, trigger_id as triggerId, status, event_summary as eventSummary,

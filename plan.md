@@ -1,421 +1,209 @@
-# UI Design Plan: Interaction Types + Artifacts
+# Feature Plan — AI Platform
 
-## Design Philosophy
+## Current State Summary
 
-All three features share one pattern: **you give AI instructions, it produces output**. The only difference is *when* it runs:
-
-| Type | Trigger | Interaction Style |
-|------|---------|-------------------|
-| **Chat** | User sends a message | Real-time, conversational, back-and-forth |
-| **Tasks** | A schedule fires (cron/interval) | Autonomous, runs in background, produces reports |
-| **Triggers** | A condition is met (webhook, data change) | Reactive, event-driven, produces alerts/actions |
-
-**Artifacts** are the structured outputs any of these can produce — code, documents, tables, summaries — displayed in a dedicated panel rather than inlined in text.
+The platform has a solid foundation: chat with SSE streaming, scheduled tasks (UI only — execution is placeholder), data triggers (webhook/poll/manual — also placeholder), artifacts (partially integrated), settings (theme only), and a clean Angular 21 + Fastify + SQLite stack. No auth (single-user by design). No real background job execution yet.
 
 ---
 
-## 1. Global Layout Evolution
+## Proposed Features — Critical Analysis
 
-### Current Layout
-```
-┌──────────┬───────────────────────────────────────┐
-│ NAV (260)│  CONTENT                               │
-│          │                                        │
-│ Chat     │  (full width page)                     │
-│ Tasks    │                                        │
-│ Triggers │                                        │
-│ Settings │                                        │
-└──────────┴───────────────────────────────────────┘
-```
+### 1. Microsoft Graph API Integration (Email & Calendar)
 
-### New Layout — with Artifact Panel
-```
-┌──────────┬──────────────────────────┬─────────────┐
-│ NAV (64) │  CONTENT                 │  ARTIFACT   │
-│          │                          │  PANEL      │
-│  💬      │  Sub-sidebar │ Main area │  (slide-in, │
-│  📋      │  (contextual)│           │   420px)    │
-│  ⚡      │              │           │             │
-│          │              │           │             │
-│  ──      │              │           │             │
-│  ⚙️      │              │           │             │
-└──────────┴──────────────┴───────────┴─────────────┘
-```
+**What it would do:** Read/send emails, create/manage calendar events, pull contacts — all from within the platform.
 
-**Key change**: The main nav sidebar collapses to an **icon rail** (64px). This gives more horizontal space for the three-panel layout (sub-sidebar + main + artifacts). Each feature provides its own contextual sub-sidebar. The nav rail shows icons with tooltips, with labels revealed on hover/focus.
+**Verdict: Yes, but scope it tightly.**
 
----
+**Why it's valuable:**
+- This is where the platform goes from "chatbot wrapper" to "personal assistant." Email triage and calendar awareness are the highest-leverage automations for a personal tool.
+- Graph API is the right choice if you're on Microsoft 365. It's one OAuth flow for mail, calendar, contacts, OneDrive, etc.
+- Integrates naturally with existing features: tasks can send email digests, triggers can fire on new emails, chat can draft replies.
 
-## 2. Chat Feature (Enhanced)
+**Risks & concerns:**
+- **OAuth 2.0 complexity.** Graph requires Azure AD app registration, authorization code flow with PKCE, token refresh, and consent scopes. This is a full auth subsystem to build and maintain. For a single-user app you could use a long-lived refresh token, but it still expires and needs rotation.
+- **Scope creep.** "Email integration" can balloon from "read inbox" to "full email client." Define the boundary: read-only triage + AI-drafted replies + send via approval? Or full CRUD?
+- **Rate limits & pagination.** Graph API has throttling (429s) and paginated responses. You'll need retry logic and delta queries for efficient syncing.
+- **Data storage.** Do you cache emails in SQLite? If yes, you're building a local email index. If no, every action hits the API.
 
-### Layout
-```
-┌──────┬─────────────┬─────────────────────┬──────────────┐
-│ Rail │ Conversations│    Messages          │  Artifact    │
-│      │ (240px)     │                      │  Panel       │
-│  💬  │             │  ┌─────────────────┐ │  (optional)  │
-│  📋  │ + New Chat  │  │ User message    │ │              │
-│  ⚡  │             │  └─────────────────┘ │  ┌────────┐  │
-│      │ Today       │  ┌─────────────────┐ │  │ Code   │  │
-│  ──  │  > Conv 1   │  │ AI response     │ │  │ block  │  │
-│  ⚙️  │  > Conv 2   │  │                 │ │  │        │  │
-│      │             │  │  [View artifact]│ │  └────────┘  │
-│      │ Yesterday   │  └─────────────────┘ │              │
-│      │  > Conv 3   │                      │              │
-│      │             │  ┌─────────────────┐ │              │
-│      │             │  │ [Input area   ] │ │              │
-│      │             │  └─────────────────┘ │              │
-└──────┴─────────────┴─────────────────────┴──────────────┘
-```
+**Recommended scope (Phase 1):**
+- Azure AD OAuth flow with token storage in SQLite
+- Read recent emails (last 24h / unread) — no full sync
+- AI-powered email summarization in chat ("summarize my unread emails")
+- Draft reply via chat, send on explicit approval
+- Read today's calendar events ("what's on my calendar today?")
+- Create calendar events from chat ("schedule a meeting with X at 3pm")
+- **Skip for now:** contacts sync, OneDrive, full email search, email rules
 
-### What Changes
-- Conversations sub-sidebar gains **date grouping** (Today, Yesterday, Previous 7 days, Older)
-- AI messages that contain structured content (code blocks, markdown docs, tables) render an **artifact card** — a compact preview with a "View" button
-- Clicking an artifact card opens/updates the **Artifact Panel** on the right
-- When no artifact is open, the messages area takes full remaining width
-- Artifact panel slides in from the right with a smooth 300ms ease transition
-
-### Artifact Detection
-The AI response is parsed for artifact-worthy content:
-- Fenced code blocks (```language ... ```) longer than ~5 lines
-- Markdown tables
-- Structured data / JSON blocks
-- Explicitly tagged artifacts (future: tool-use output)
-
-Short inline code stays in the message. Only substantial blocks get promoted to artifacts.
+**Implementation:**
+- New `api/src/services/graph.service.ts` — token management, Graph client
+- New `api/src/routes/graph.routes.ts` — OAuth callback, email/calendar endpoints
+- New settings UI section for Microsoft account connection
+- Extend AI system prompt with tool-use for email/calendar actions
+- New DB tables: `oauth_tokens`, optionally `email_cache`
 
 ---
 
-## 3. Tasks Feature (Recurring/Scheduled)
+### 2. Self-Learning System
 
-### Layout
-```
-┌──────┬─────────────┬──────────────────────────────────────┐
-│ Rail │ Task List    │    Task Detail                       │
-│      │ (280px)     │                                      │
-│  💬  │             │  ┌──────────────────────────────────┐│
-│  📋  │ + New Task  │  │ Task Name            [ON] toggle ││
-│  ⚡  │             │  │ Every day at 9:00 AM             ││
-│      │ ● Active(3) │  ├──────────────────────────────────┤│
-│  ──  │  > Daily    │  │ PROMPT                           ││
-│  ⚙️  │    digest   │  │ "Summarize my RSS feeds and..."  ││
-│      │  > Weekly   │  │                          [Edit]  ││
-│      │    report   │  ├──────────────────────────────────┤│
-│      │  > Health   │  │ RUN HISTORY                      ││
-│      │    check    │  │                                  ││
-│      │             │  │ ✓ Mar 16, 9:00 AM  [View output] ││
-│      │ ○ Paused(1) │  │ ✓ Mar 15, 9:00 AM  [View output] ││
-│      │  > Old task │  │ ✗ Mar 14, 9:00 AM  [View error]  ││
-│      │             │  │                                  ││
-│      │             │  └──────────────────────────────────┘│
-└──────┴─────────────┴──────────────────────────────────────┘
-```
+**What it would do:** The platform learns from its own execution history — reviewing task/trigger run logs, identifying patterns, and improving prompts or suggesting new automations.
 
-### Task List (Sub-sidebar)
-- **"+ New Task"** button at top (primary style)
-- Tasks grouped by status: **Active** (green dot) / **Paused** (gray dot)
-- Each item shows: task name, next run time (muted), status indicator
-- Active task highlighted with left border accent
+**Verdict: Partially. The log review is valuable; "self-learning" is overpromised.**
 
-### Task Detail (Main Area)
-Split into clear sections:
+**Why it's valuable (the good parts):**
+- **Run log review:** Tasks and triggers already store run outputs. An AI pass over recent runs to flag failures, summarize trends, or suggest prompt tweaks is genuinely useful and straightforward to build.
+- **Prompt refinement:** If a task consistently produces poor results, the system could suggest prompt improvements. This is achievable with a meta-prompt that reviews output quality.
+- **Schedule optimization:** If a task runs hourly but only produces meaningful output twice a day, suggest a better schedule.
 
-**Header**
-- Task name (editable inline)
-- Schedule description in human-readable form ("Every weekday at 9:00 AM")
-- ON/OFF toggle switch (enables/disables the schedule)
-- Actions: Edit, Duplicate, Delete
+**Why "self-learning" is dangerous:**
+- **Feedback loops.** An AI modifying its own prompts without human review creates drift. After 10 iterations, the prompt may be unrecognizable. Every change must be human-approved.
+- **No ground truth.** What does "better" mean? Without explicit user feedback (thumbs up/down, corrections), the system is guessing. "Self-learning" without a loss function is just mutation.
+- **Complexity vs. value.** A system that reviews logs and surfaces insights (dashboard) is 10x simpler and nearly as useful as one that autonomously rewrites its own behavior.
 
-**Prompt Section**
-- Displays the task's AI instructions
-- Expandable textarea for editing
-- Optional: model selector, max tokens
+**Recommended scope:**
+- **Run analytics dashboard:** Success/failure rates, token usage trends, output length distribution per task/trigger. This is mostly SQL aggregation + charts.
+- **AI log review task:** A built-in meta-task that periodically reviews recent runs and produces a summary: "Task X failed 3/10 times this week, common error: rate limit. Suggestion: reduce frequency."
+- **Prompt suggestions:** When viewing a task, offer "Analyze & improve prompt" button that sends the prompt + recent outputs to Claude for critique. User reviews and applies manually.
+- **Skip:** Autonomous prompt modification, unsupervised learning loops, automatic schedule changes.
 
-**Schedule Section**
-- Visual schedule picker with presets:
-  - Every N minutes/hours
-  - Daily at [time]
-  - Weekly on [days] at [time]
-  - Custom cron expression (advanced toggle)
-- Shows next 3 upcoming runs
-
-**Run History**
-- Reverse-chronological list of past executions
-- Each run shows: timestamp, duration, status (success/failure), token usage
-- Click a run to expand and see:
-  - The full AI output
-  - Any artifacts produced
-  - Error details (if failed)
-- "View output" opens the artifact panel with that run's full output
-
-### New Task Flow
-1. Click "+ New Task"
-2. **Step 1**: Name + Prompt (large textarea, placeholder: "What should the AI do?")
-3. **Step 2**: Schedule picker (presets + custom cron)
-4. **Step 3**: Review & Create
-- Single-page form, no wizard/stepper needed — just well-organized sections with a sticky "Create Task" button at bottom
+**Implementation:**
+- New `api/src/routes/analytics.routes.ts` — aggregation endpoints
+- Dashboard component in settings or as a new top-level feature
+- "Analyze prompt" action on task/trigger detail views
+- Extend run history to include structured metadata (token count, response time, output hash for dedup)
 
 ---
 
-## 4. Triggers Feature (Event-Driven)
+### 3. Dynamically Rendered Components
 
-### Layout
-```
-┌──────┬─────────────┬──────────────────────────────────────┐
-│ Rail │ Trigger List │    Trigger Detail                    │
-│      │ (280px)     │                                      │
-│  💬  │             │  ┌──────────────────────────────────┐│
-│  📋  │ + New       │  │ Trigger Name         [ON] toggle ││
-│  ⚡  │   Trigger   │  │ ⚡ Webhook · 12 runs              ││
-│      │             │  ├──────────────────────────────────┤│
-│  ──  │ ● Active(2) │  │ CONDITION                        ││
-│  ⚙️  │  > New PR   │  │ Type: Webhook                    ││
-│      │    review   │  │ URL: /api/triggers/abc123/fire   ││
-│      │  > Error    │  │ Filter: body.action == "opened"  ││
-│      │    alert    │  ├──────────────────────────────────┤│
-│      │             │  │ PROMPT                           ││
-│      │ ○ Paused(1) │  │ "Review the PR diff and..."      ││
-│      │  > Old one  │  │                          [Edit]  ││
-│      │             │  ├──────────────────────────────────┤│
-│      │             │  │ RECENT RUNS                      ││
-│      │             │  │                                  ││
-│      │             │  │ ✓ Mar 16, 2:14 PM  PR #42 rev.. ││
-│      │             │  │ ✓ Mar 15, 11:02 AM PR #41 rev.. ││
-│      │             │  └──────────────────────────────────┘│
-└──────┴─────────────┴──────────────────────────────────────┘
-```
+**What it would do:** AI responses can include structured data (charts, forms, tables, interactive widgets) that render as real Angular components instead of plain markdown.
 
-### Trigger Types (initial set)
-1. **Webhook** — receives an HTTP POST, runs AI with the payload as context
-2. **Schedule + Condition** — polls a URL/API on a schedule, runs AI only when data changes
-3. **Manual** — fire-and-forget button (useful for testing or one-off runs with a saved prompt)
+**Verdict: Yes — this is the artifact system's natural evolution.**
 
-### Trigger List (Sub-sidebar)
-- Same pattern as Tasks: grouped by Active/Paused
-- Each item: name, type icon, last fired time
-- Color-coded type badges (webhook = purple, poll = amber, manual = gray)
+**Why it's valuable:**
+- You already have artifact detection (code blocks → artifact panel). Extending this to render actual components (charts, data tables, Mermaid diagrams, forms) makes the platform dramatically more useful for research.
+- Differentiates from every other chat UI that just renders markdown.
+- Enables AI to produce actionable outputs: a form the user fills out, a chart they can interact with, a table they can sort/filter.
 
-### Trigger Detail (Main Area)
+**Risks & concerns:**
+- **Security.** If "dynamic components" means executing AI-generated code at runtime, this is an XSS vector. You must use a whitelist of known component types, NOT arbitrary code execution.
+- **Complexity.** Angular's AOT compilation means you can't just `eval()` a component. You need a registry of pre-built components that get selected based on structured AI output.
+- **AI reliability.** The AI must output valid structured data (JSON schema) to drive these components. Malformed output = broken UI. Need graceful fallback to raw content.
 
-**Header**
-- Trigger name + type badge
-- ON/OFF toggle
-- Run count / last run time
-- Actions: Edit, Test Fire, Duplicate, Delete
+**Recommended approach:**
+- Define a component registry: `chart`, `data-table`, `mermaid-diagram`, `form`, `code-editor`, `image-gallery`, `key-value-list`
+- AI outputs structured blocks (JSON with `type` + `data` fields) detected during streaming
+- `DynamicBlockComponent` uses `@switch` on type to render the appropriate pre-built component
+- Each component type has a JSON schema for validation
+- Fallback: if data doesn't validate, render as raw JSON in a code block
+- **Do NOT:** eval code, use `ComponentFactoryResolver` with runtime compilation, or allow arbitrary HTML injection
 
-**Condition Section** (varies by type)
-- *Webhook*: Shows the unique webhook URL (copy button), optional JSON path filter
-- *Schedule + Condition*: URL to poll, polling interval, JSONPath condition expression
-- *Manual*: Just a "Fire Now" button
-
-**Prompt Section**
-- Same as Tasks — the AI instructions
-- Template variables available: `{{payload}}`, `{{timestamp}}`, `{{previous_result}}`
-- Syntax-highlighted preview of the rendered prompt with sample data
-
-**Run History**
-- Same pattern as Tasks
-- Each run shows: trigger event summary, AI output preview, status
-- Expandable to full output + artifacts
-
-### New Trigger Flow
-- Similar to Tasks: single-page form
-- Type selector at top (three cards: Webhook, Poll, Manual)
-- Config fields change based on selected type
-- Prompt editor + "Create Trigger" button
+**Implementation:**
+- Extend artifact model with richer type system
+- New shared components: `ChartComponent` (lightweight — Chart.js or similar), `DataTableComponent`, `MermaidComponent`
+- Update `MessageBubbleComponent` to detect and render dynamic blocks inline
+- Update AI system prompt to describe available output formats
+- Add JSON schema validation for each block type
 
 ---
 
-## 5. Artifact Panel
+### 4. History & Artifacts (Enhancement)
 
-This is the most cross-cutting new feature. It's a **slide-over panel** that appears on the right side of any page.
+**What it would do:** Full-featured artifact management — browsing, searching, versioning, and exporting artifacts across all sources (chat, tasks, triggers).
 
-### Layout
-```
-┌──────────────────────────────────────────┐
-│  ┌─ Artifact Panel ─────────────────┐    │
-│  │ [×]  artifact-name.py    [⤓] [📋]│    │
-│  │──────────────────────────────────│    │
-│  │ ┌──────────────────────────────┐ │    │
-│  │ │                              │ │    │
-│  │ │  def hello():               │ │    │
-│  │ │      print("Hello world")   │ │    │
-│  │ │                              │ │    │
-│  │ │                              │ │    │
-│  │ │                              │ │    │
-│  │ └──────────────────────────────┘ │    │
-│  │                                  │    │
-│  │  Created from: Daily Digest      │    │
-│  │  Mar 16, 2026 · 2.4 KB          │    │
-│  └──────────────────────────────────┘    │
-└──────────────────────────────────────────┘
-```
+**Verdict: Yes — finish what's already started.**
 
-### Artifact Types & Rendering
-| Type | Rendering |
-|------|-----------|
-| **Code** | Syntax-highlighted block with language tag, line numbers |
-| **Markdown** | Rendered HTML (headings, lists, links, etc.) |
-| **Table/CSV** | Formatted table with sortable columns |
-| **JSON** | Collapsible tree view with syntax highlighting |
-| **Plain text** | Monospace with preserved whitespace |
+**Why it's valuable:**
+- Artifacts already exist in the DB and have basic CRUD routes, but they're barely integrated. Chat detects code blocks but doesn't persist them as artifacts. Tasks/triggers don't produce artifacts at all.
+- A unified artifact browser turns the platform from "chat history you scroll through" to "knowledge base you search."
+- This is prerequisite infrastructure for the dynamic components feature above.
 
-### Panel Behavior
-- **Width**: 420px (CSS variable `--artifact-panel-width`)
-- **Appears**: Slides in from right with `transform: translateX` animation (300ms ease)
-- **Disappears**: Close button (×) or clicking outside, slides back out
-- **Resizable**: Drag handle on left edge (stretch to 50% max viewport)
-- **Stacks**: Only one artifact open at a time; clicking another replaces it
-- **Toolbar**: Close, copy to clipboard, download as file, open fullscreen
+**What's actually missing:**
+- **Artifact persistence from chat:** Currently artifacts are detected client-side but not saved to the DB via the API.
+- **Artifact generation from tasks/triggers:** Run outputs should optionally produce artifacts.
+- **Browsing UI:** No dedicated artifact browser page exists. You can only see artifacts inline in chat.
+- **Search:** No full-text search on artifact content.
+- **Versioning:** No version history. If the AI regenerates a response, the old artifact is gone.
+- **Export:** No download/copy/share functionality beyond the copy button in the panel.
 
-### Artifact in Messages
-Inside a chat message, an artifact renders as a compact card:
-```
-┌─────────────────────────────────────┐
-│ 📄 daily-summary.md                 │
-│ Markdown · 1.2 KB                   │
-│                                     │
-│ > Here's your daily summary for     │
-│ > March 16th. The key highlights... │
-│                              [View] │
-└─────────────────────────────────────┘
-```
-- Shows: icon, filename/title, type, size, 2-3 line preview
-- "View" button opens the artifact panel
+**Recommended scope:**
+- **Persist artifacts from chat:** When AI produces code/structured content, save to artifacts table with `sourceType: 'chat'` and link to conversation.
+- **Artifact browser page:** New `/artifacts` route with grid/list view, filtering by type/source, full-text search (SQLite FTS5).
+- **Artifact from task/trigger runs:** When a run completes, parse output for artifact-worthy content and save.
+- **Export:** Download as file (code → `.py`/`.js`/etc., markdown → `.md`, JSON → `.json`).
+- **Version history:** Optional — track artifact updates with a `artifact_versions` table. Only if there's a clear use case.
+- **Skip for now:** Sharing, collaboration, artifact-to-artifact linking, tagging.
+
+**Implementation:**
+- New feature route `/artifacts` with browse/search UI
+- SQLite FTS5 virtual table for artifact search
+- Update chat streaming to persist detected artifacts via API
+- Update task/trigger execution to parse and save artifacts
+- Export endpoint: `GET /api/artifacts/:id/download`
 
 ---
 
-## 6. Artifact Model (Data)
+### 5. Tracing
 
-```typescript
-interface Artifact {
-  id: string;
-  title: string;                      // e.g. "daily-summary.md"
-  type: 'code' | 'markdown' | 'table' | 'json' | 'text';
-  language?: string;                  // for code: 'python', 'typescript', etc.
-  content: string;                    // raw content
-  sourceType: 'chat' | 'task' | 'trigger';
-  sourceId: string;                   // conversation_id, task_id, or trigger_id
-  runId?: string;                     // for task/trigger: which run produced it
-  createdAt: string;
-}
-```
+**What it would do:** Observability into AI operations — tracking token usage, latency, prompt chains, tool calls, and costs across all AI interactions.
 
-### DB Schema Addition
-```sql
-CREATE TABLE artifacts (
-  id          TEXT PRIMARY KEY,
-  title       TEXT NOT NULL,
-  type        TEXT NOT NULL CHECK (type IN ('code', 'markdown', 'table', 'json', 'text')),
-  language    TEXT,
-  content     TEXT NOT NULL,
-  source_type TEXT NOT NULL CHECK (source_type IN ('chat', 'task', 'trigger')),
-  source_id   TEXT NOT NULL,
-  run_id      TEXT,
-  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
-);
-```
+**Verdict: Yes, but build it lean.**
+
+**Why it's valuable:**
+- You're running AI calls across chat, tasks, and triggers. Without tracing, you're flying blind on costs, performance, and failure modes.
+- Essential for the "self-learning" log review feature — you need structured trace data to analyze.
+- Debugging AI issues ("why did the task produce garbage?") requires seeing the full prompt, response, and any tool calls.
+
+**Why not to over-build:**
+- Full distributed tracing (OpenTelemetry, Jaeger) is overkill for a single-user SQLite app. You don't have microservices.
+- Third-party tracing platforms (LangSmith, Langfuse) add external dependencies and costs. For a personal tool, local is better.
+
+**Recommended scope:**
+- **Trace table in SQLite:** Each AI call gets a trace record: `id`, `source` (chat/task/trigger), `sourceId`, `model`, `inputTokens`, `outputTokens`, `latencyMs`, `status`, `error`, `createdAt`.
+- **Trace detail:** Store the full system prompt + user messages + response for debugging. Link to conversation/task/trigger.
+- **Dashboard:** Token usage over time (daily/weekly), cost estimation (tokens × rate), latency percentiles, error rate.
+- **Inline visibility:** Show token count and latency on each chat message and task/trigger run.
+- **Skip:** OpenTelemetry integration, distributed trace IDs, span trees, external exporters.
+
+**Implementation:**
+- New DB table: `traces`
+- Wrap `AIService.streamChatResponse()` to automatically record traces
+- New `api/src/routes/trace.routes.ts` — query endpoints with aggregation
+- Dashboard component (could live under settings or as standalone page)
+- Extend `MessageBubbleComponent` and `RunHistoryItemComponent` to show trace metadata
 
 ---
 
-## 7. Design System Additions
+## Priority Ranking
 
-### New CSS Variables Needed
-```scss
-// Layout
---nav-rail-width: 64px;         // collapsed nav
---sub-sidebar-width: 280px;     // contextual sidebar
---artifact-panel-width: 420px;  // artifact slide-over
+Ordered by value-to-effort ratio and dependency chain:
 
-// New semantic colors
---color-success: #{$green-600};
---color-success-light: #{$green-50};
---color-warning: #{$amber-600};
---color-warning-light: #{$amber-50};
---color-purple: #7c3aed;        // for webhook badges
---color-purple-light: #f5f3ff;
-
-// Status indicators
---color-status-active: #{$green-500};
---color-status-paused: #{$gray-400};
---color-status-error: #{$red-500};
---color-status-running: #{$blue-500};
-```
-
-### Shared Components Needed
-1. **`StatusBadge`** — colored dot + label (Active, Paused, Error, Running)
-2. **`Toggle`** — on/off switch for enabling tasks/triggers
-3. **`ArtifactCard`** — compact preview card for inline display
-4. **`ArtifactPanel`** — the slide-over viewer
-5. **`EmptyState`** — reusable empty state with icon, title, description, CTA
-6. **`RunHistoryItem`** — expandable row for task/trigger run history
-7. **`SchedulePicker`** — visual cron/interval selector
-8. **`PromptEditor`** — textarea with template variable support
+| Priority | Feature | Effort | Value | Rationale |
+|----------|---------|--------|-------|-----------|
+| **P0** | Real task/trigger execution | Medium | Critical | **Everything else is moot if scheduled tasks and triggers don't actually run.** The current placeholder implementations need to be replaced with a real cron runner and webhook processor before adding new features on top. |
+| **P1** | History & Artifacts | Medium | High | Finish existing half-built system. Prerequisite for dynamic components. No new external deps. |
+| **P2** | Tracing | Low-Med | High | Mostly DB + aggregation. Unlocks cost visibility and debugging. Prerequisite for self-learning log review. |
+| **P3** | Dynamic Components | Medium | High | Biggest UX differentiator. Build on completed artifact system. |
+| **P4** | Self-Learning (Log Review) | Medium | Medium | Depends on tracing data. Keep scope to insights dashboard + prompt suggestions, not autonomous modification. |
+| **P5** | Graph API Integration | High | High | Most complex (OAuth, external API, token management). Highest long-term value but save for last when the foundation is solid. |
 
 ---
 
-## 8. Navigation Redesign: Icon Rail
+## What I'd Cut or Defer
 
-The current 260px text sidebar becomes a 64px icon rail:
-
-```
-┌──────┐
-│  🔷  │  ← Logo (small mark)
-│      │
-│  💬  │  ← Chat (tooltip: "Chat")
-│  📋  │  ← Tasks (tooltip: "Tasks")
-│  ⚡  │  ← Triggers (tooltip: "Triggers")
-│      │
-│      │
-│      │
-│  ⚙️  │  ← Settings (pushed to bottom)
-└──────┘
-```
-
-- Icons centered, 40×40px hit target
-- Active state: icon gets primary color bg pill
-- Tooltip on hover shows label
-- Settings pushed to bottom with separator
-- Frees up ~200px of horizontal space for content
+- **"Self-learning" as autonomous prompt rewriting** — high risk, low trust, hard to debug. Replace with human-in-the-loop prompt suggestions.
+- **Full email client via Graph** — scope to triage + draft + send. Don't rebuild Outlook.
+- **Runtime code execution for dynamic components** — security nightmare. Use a component registry with pre-built types.
+- **Artifact versioning** — only build if you find yourself regenerating content frequently. YAGNI otherwise.
+- **External tracing platforms** — unnecessary for single-user. Local SQLite traces are sufficient.
 
 ---
 
-## 9. Implementation Phases
+## What's Missing From Your List
 
-### Phase A: Layout Refactor + Artifact Panel Shell
-1. Convert nav sidebar to icon rail
-2. Create `ArtifactPanel` component (empty shell, slide-in/out)
-3. Add CSS variables for new layout widths
-4. Adjust chat feature to work with new layout
+Features worth considering that weren't proposed:
 
-### Phase B: Chat Artifacts
-1. Add artifact detection logic (parse AI responses for code blocks, tables, etc.)
-2. Create `ArtifactCard` component for inline display in messages
-3. Wire artifact cards to open the artifact panel
-4. Create artifact renderers (code with highlighting, markdown, table, JSON)
-5. Add artifact model + API endpoints + DB table
-
-### Phase C: Tasks Feature
-1. Create task model, service, API endpoints, DB tables
-2. Build task list sub-sidebar component
-3. Build task detail view (header, prompt, schedule, run history)
-4. Build new task form with schedule picker
-5. Implement task execution engine (backend cron runner)
-6. Wire task runs to produce artifacts
-
-### Phase D: Triggers Feature
-1. Create trigger model, service, API endpoints, DB tables
-2. Build trigger list sub-sidebar component
-3. Build trigger detail view (header, condition, prompt, run history)
-4. Build new trigger form with type selector
-5. Implement webhook receiver endpoint
-6. Implement poll-based trigger engine
-7. Wire trigger runs to produce artifacts
-
-### Phase E: Polish
-1. Empty states for all features
-2. Loading skeletons
-3. Error states and retry
-4. Keyboard shortcuts
-5. Responsive behavior (collapse sub-sidebar on smaller screens)
-6. Animation polish (panel transitions, list reordering)
+1. **Real task/trigger execution engine (P0)** — Tasks and triggers are currently placeholders. Before adding any new features, the existing scheduled execution (cron) and webhook/poll processing need to actually work. This is arguably the most important thing to build next.
+2. **Tool use / function calling** — The Vercel AI SDK supports tool definitions. Enabling the AI to call tools (search the web, query APIs, read files) would multiply the platform's usefulness. This is the backbone that makes Graph API integration, email triage, and calendar management possible through natural chat rather than dedicated UI.
+3. **Conversation branching / forking** — When exploring research topics, being able to branch a conversation at any point is valuable. Simpler than it sounds: duplicate messages up to branch point into a new conversation.
+4. **System prompt management** — Currently hardcoded in `ai.service.ts`. A settings page to customize the AI's personality, knowledge context, and available tools per conversation or globally.
+5. **File/document upload** — Drag-and-drop files into chat for analysis. Requires multipart upload endpoint and document parsing (PDF, CSV, etc.).
